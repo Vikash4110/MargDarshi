@@ -1,0 +1,35 @@
+.custom-slider .slick-slide > div {
+    margin: 0 15px; /* Adjust the margin for spacing between slides */
+  }
+  
+  .slick-list {
+    margin: 0 -15px; /* Prevents horizontal overflow */
+  }
+  
+  .custom-slider .slide-item {
+    transition: transform 0.3s ease;
+  }
+  
+  .custom-slider .slide-item:hover {
+    transform: scale(1.05); /* Hover effect to scale up the cards */
+  }
+  
+  /* Custom arrow buttons */
+  .custom-next-arrow,
+  .custom-prev-arrow {
+    background: #127c71;
+    color: white;
+    border-radius: 50%;
+    padding: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .custom-next-arrow:hover,
+  .custom-prev-arrow:hover {
+    background: #0a554d; /* Darker shade on hover */
+  }
+  

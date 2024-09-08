@@ -1,30 +1,20 @@
-const { z } = require('zod'); // Import Zod
-
-const validate = (schema) => (req, res, next) => {
+const validate = (schema) => async (req, res, next) => {
     try {
-        // Parse request body with the schema
-        const parsedBody = schema.parse(req.body); // Use `parse` for synchronous validation
-        req.body = parsedBody;
+        const parseBody = await schema.parseAsync(req.body);
+        req.body = parseBody;
         next();
     } catch (error) {
-        // Check if error is an instance of ZodError
-        if (error instanceof z.ZodError) {
-            const errors = error.errors.map(err => ({
-                field: err.path.join('.'),
-                message: err.message
-            }));
-            return res.status(422).json({
-                status: 422,
-                message: "Validation Error",
-                errors
-            });
-        }
-        // Handle other types of errors
-        console.error("Validation middleware error:", error);
-        return res.status(500).json({
-            status: 500,
-            message: "Internal Server Error",
-        });
+        const status = 422;
+        const message = "Fill the Input Properly";
+        const extraDetails = error.errors && error.errors.length > 0 ? error.errors[0].message : "Validation error";
+
+        const errorResponse = {
+            status,
+            extraDetails,
+            message,
+        };
+        console.log(errorResponse);
+        res.status(422).json(errorResponse);
     }
 };
 
