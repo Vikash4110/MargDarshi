@@ -85,7 +85,7 @@ const login = async (req, res) => {
     }
 };
 
-const user = async (req, res) => {
+const mentee = async (req, res) => {
     try {
         res.status(200).json(req.user);
     } catch (err) {
@@ -94,4 +94,4 @@ const user = async (req, res) => {
     }
 };
 
-module.exports = { register, login, user };
+module.exports = { register, login, mentee };

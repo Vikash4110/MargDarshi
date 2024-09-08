@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const Mentor = require("../models/mentor-model");
 
-const authMiddleware = async (req, res, next) => {
+const mentorMiddleware = async (req, res, next) => {
   const token = req.header("Authorization");
 
   if (!token) {
@@ -25,4 +25,4 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+module.exports = mentorMiddleware;

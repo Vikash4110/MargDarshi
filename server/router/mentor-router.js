@@ -3,7 +3,7 @@ const router = express.Router();
 const mentorControllers = require("../controllers/mentor-controller");
 const { SignupSchema, loginSchema } = require("../validators/mentor-validator");
 const validate = require("../middlewares/validate-middleware");
-const authMiddleware = require("../middlewares/auth-middleware");
+const mentorMiddleware = require("../middlewares/mentor-middleware");
 
 // Registration route
 router.route("/mentor-register").post(validate(SignupSchema), mentorControllers.register);
@@ -12,6 +12,6 @@ router.route("/mentor-register").post(validate(SignupSchema), mentorControllers.
 router.route("/mentor-login").post(validate(loginSchema), mentorControllers.login);
 
 // User details route (protected)
-router.route("/mentor-user").get(authMiddleware, mentorControllers.user);
+router.route("/mentor-user").get(mentorMiddleware, mentorControllers.mentor);
 
 module.exports = router;

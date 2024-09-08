@@ -78,8 +78,8 @@ const login = async (req, res) => {
     }
 };
 
-// Fetch mentor user details
-const user = async (req, res) => {
+// Fetch mentee user details
+const mentor = async (req, res) => {
     try {
         res.status(200).json(req.user);
     } catch (err) {
@@ -88,4 +88,4 @@ const user = async (req, res) => {
     }
 };
 
-module.exports = { register, login, user };
+module.exports = { register, login, mentor };
