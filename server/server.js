@@ -2,9 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const connectDb = require('./utils/db');
 const cors = require('cors');
-// const errorMiddleware = require('./middlewares/error-middleware');
+const errorMiddleware = require('./middlewares/error-middleware');
 
-// const authRoute = require('./router/auth-router');
+const mentorRoute = require('./router/mentor-router');
+const menteeRoute = require('./router/mentee-router');
 // const contactRoute = require('./router/contact-user');
 // const adminRoute = require('./router/admin-router');
 
@@ -23,11 +24,12 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// app.use('/api/auth', authRoute);
-// app.use('/api/form', contactRoute);
-// app.use('/api/admin', adminRoute);
+app.use('/api/auth', mentorRoute);
+app.use('/api/auth', menteeRoute);
 
 
+// Error handling middleware
+app.use(errorMiddleware);
 
 app.get('/', (req, res) => {
   res.send('Hello Ptu');
