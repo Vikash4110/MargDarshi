@@ -8,7 +8,11 @@ import Contact from './pages/Contact';
 import MentorRegister from "./pages/MentorRegister";
 import MenteeRegister from "./pages/MenteeRegister";
 import MentorLogin from "./pages/MentorLogin";
-
+import MenteeLogin from "./pages/MenteeLogin";
+import MentorUser from "./pages/MentorUser";
+import MentorUpdate from "./Components/MentorUpdate";
+import MenteeUser from './pages/MenteeUser';
+import LogOut from './Components/LogOut';
 const App = () => {
   return (
     <Router>
@@ -21,6 +25,11 @@ const App = () => {
           <Route path="/mentor-register" element={<MentorRegister />} />
           <Route path="/mentor-login" element={<MentorLogin />} />
           <Route path="/mentee-register" element={<MenteeRegister />} />
+          <Route path="/mentee-login" element={<MenteeLogin />} />
+          <Route path="/mentor-user" element={<MentorUser />} />
+          <Route path="/mentee-user" element={<MenteeUser />} />
+          <Route path="/mentor-update" element={<MentorUpdate />} />
+          <Route path="/logout" element={<LogOut />} />
         </Routes>
     </Router>
   );

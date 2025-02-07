@@ -11,7 +11,7 @@ import {
   faPhone,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion"; // Import Framer Motion for transitions
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -31,13 +31,13 @@ const MentorRegister = ({ setIsLoggedIn }) => {
     mentorshipTopics: [],
     bio: "",
   });
-
   const [newSkill, setNewSkill] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1); // Manage form step
   const { storeTokenInLS } = useAuth();
 
-  // Input handler
+  // Handle input changes
   const handleInput = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
@@ -65,40 +65,44 @@ const MentorRegister = ({ setIsLoggedIn }) => {
     }
   };
 
-  // Remove skill from skills array
-  const handleRemoveSkill = (skill) => {
-    setUser((prev) => ({
-      ...prev,
-      skills: prev.skills.filter((s) => s !== skill),
-    }));
+  // Remove skill
+  const handleRemoveSkill = (index) => {
+    const updatedSkills = user.skills.filter((_, i) => i !== index);
+    setUser((prev) => ({ ...prev, skills: updatedSkills }));
   };
 
-  // Remove topic from mentorship topics array
-  const handleRemoveTopic = (topic) => {
-    setUser((prev) => ({
-      ...prev,
-      mentorshipTopics: prev.mentorshipTopics.filter((t) => t !== topic),
-    }));
+  // Remove mentorship topic
+  const handleRemoveTopic = (index) => {
+    const updatedTopics = user.mentorshipTopics.filter((_, i) => i !== index);
+    setUser((prev) => ({ ...prev, mentorshipTopics: updatedTopics }));
   };
 
-// Form submission handler
-const handleSubmit = async (e) => {
+  // Handle next step
+  const nextStep = () => {
+    setStep((prevStep) => prevStep + 1);
+  };
+
+  // Handle previous step
+  const prevStep = () => {
+    setStep((prevStep) => prevStep - 1);
+  };
+
+  // Form submission handler
+  const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!backendUrl) {
       toast.error("Backend URL is not defined. Please check your environment variables.");
-      return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      // Ensure yearsOfExperience is a number
       const formattedUser = {
         ...user,
         yearsOfExperience: Number(user.yearsOfExperience), // Parse to number
       };
-  
+
       const response = await fetch(`${backendUrl}/api/auth/mentor-register`, {
         method: "POST",
         headers: {
@@ -106,13 +110,13 @@ const handleSubmit = async (e) => {
         },
         body: JSON.stringify(formattedUser),
       });
-  
+
       const res_data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(res_data.extraDetails || res_data.message || "Registration failed");
       }
-  
+
       storeTokenInLS(res_data.token);
       setUser({
         fullName: "",
@@ -129,7 +133,7 @@ const handleSubmit = async (e) => {
         bio: "",
       });
       toast.success("Registered Successfully");
-      navigate("/");
+      navigate("/mentor-user");
     } catch (error) {
       console.error("Registration error: ", error);
       toast.error(error.message || "An error occurred. Please try again.");
@@ -137,210 +141,287 @@ const handleSubmit = async (e) => {
       setLoading(false);
     }
   };
-  
 
   return (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col gap-4 w-full max-w-lg mx-auto mt-6 text-center border-2 rounded-3xl py-10 lg:py-12 px-6 lg:px-10 shadow-2xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Full Name */}
-        <InputField
-          icon={faUser}
-          type="text"
-          name="fullName"
-          value={user.fullName}
-          onChange={handleInput}
-          placeholder="Full Name"
-          required
-        />
-        
-        {/* Email */}
-        <InputField
-          icon={faEnvelope}
-          type="email"
-          name="email"
-          value={user.email}
-          onChange={handleInput}
-          placeholder="Email"
-          required
-        />
-        
-        {/* Password */}
-        <InputField
-          icon={faUser}
-          type="password"
-          name="password"
-          value={user.password}
-          onChange={handleInput}
-          placeholder="Password"
-          required
-        />
+      {/* Step 1: Personal Information */}
+      {step === 1 && (
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              icon={faUser}
+              type="text"
+              name="fullName"
+              value={user.fullName}
+              onChange={handleInput}
+              placeholder="Full Name"
+              required
+            />
+            <InputField
+              icon={faEnvelope}
+              type="email"
+              name="email"
+              value={user.email}
+              onChange={handleInput}
+              placeholder="Email"
+              required
+            />
+            <InputField
+              icon={faUser}
+              type="password"
+              name="password"
+              value={user.password}
+              onChange={handleInput}
+              placeholder="Password"
+              required
+            />
+            <InputField
+              icon={faPhone}
+              type="text"
+              name="phoneNumber"
+              value={user.phoneNumber}
+              onChange={handleInput}
+              placeholder="Phone Number"
+              required
+            />
+          </div>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
+            onClick={nextStep}
+          >
+            Next
+          </button>
+        </motion.div>
+      )}
 
-        {/* Phone Number */}
-        <InputField
-          icon={faPhone}
-          type="text"
-          name="phoneNumber"
-          value={user.phoneNumber}
-          onChange={handleInput}
-          placeholder="Phone Number"
-          required
-        />
+      {/* Step 2: Job and Company Information */}
+      {step === 2 && (
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <InputField
+              icon={faBuilding}
+              type="text"
+              name="jobTitle"
+              value={user.jobTitle}
+              onChange={handleInput}
+              placeholder="Job Title"
+              required
+            />
+            <InputField
+              icon={faBuilding}
+              type="text"
+              name="industry"
+              value={user.industry}
+              onChange={handleInput}
+              placeholder="Industry"
+              required
+            />
+            <InputField
+              icon={faListOl}
+              type="number"
+              name="yearsOfExperience"
+              value={user.yearsOfExperience}
+              onChange={handleInput}
+              placeholder="Years of Experience"
+              required
+            />
+            <InputField
+              icon={faBuilding}
+              type="text"
+              name="company"
+              value={user.company}
+              onChange={handleInput}
+              placeholder="Company"
+            />
+            <InputField
+              icon={faUser}
+              type="url"
+              name="linkedInUrl"
+              value={user.linkedInUrl}
+              onChange={handleInput}
+              placeholder="LinkedIn URL"
+            />
+          </div>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
+            onClick={nextStep}
+          >
+            Next
+          </button>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
+            onClick={prevStep}
+          >
+            Back
+          </button>
+        </motion.div>
+      )}
 
-        {/* Job Title */}
-        <InputField
-          icon={faBuilding}
-          type="text"
-          name="jobTitle"
-          value={user.jobTitle}
-          onChange={handleInput}
-          placeholder="Job Title"
-          required
-        />
+      {/* Step 3: Add Skills */}
+      {step === 3 && (
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <SkillTopicInput
+            label="Skills"
+            newItem={newSkill}
+            setNewItem={setNewSkill}
+            handleAdd={handleAddSkill}
+            items={user.skills}
+            handleRemove={handleRemoveSkill}
+          />
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
+            onClick={nextStep}
+          >
+            Next
+          </button>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
+            onClick={prevStep}
+          >
+            Back
+          </button>
+        </motion.div>
+      )}
 
-        {/* Industry */}
-        <InputField
-          icon={faBuilding}
-          type="text"
-          name="industry"
-          value={user.industry}
-          onChange={handleInput}
-          placeholder="Industry"
-          required
-        />
+      {/* Step 4: Add Mentorship Topics */}
+      {step === 4 && (
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <SkillTopicInput
+            label="Mentorship Topics"
+            newItem={newTopic}
+            setNewItem={setNewTopic}
+            handleAdd={handleAddTopic}
+            items={user.mentorshipTopics}
+            handleRemove={handleRemoveTopic}
+          />
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
+            onClick={nextStep}
+          >
+            Next
+          </button>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
+            onClick={prevStep}
+          >
+            Back
+          </button>
+        </motion.div>
+      )}
 
-        {/* Years of Experience */}
-        <InputField
-          icon={faListOl}
-          type="number"
-          name="yearsOfExperience"
-          value={user.yearsOfExperience}
-          onChange={handleInput}
-          placeholder="Years of Experience"
-          required
-        />
-
-        {/* Company */}
-        <InputField
-          icon={faBuilding}
-          type="text"
-          name="company"
-          value={user.company}
-          onChange={handleInput}
-          placeholder="Company"
-        />
-
-        {/* LinkedIn URL */}
-        <InputField
-          icon={faUser}
-          type="url"
-          name="linkedInUrl"
-          value={user.linkedInUrl}
-          onChange={handleInput}
-          placeholder="LinkedIn URL"
-        />
-      </div>
-
-      {/* Skills Section */}
-      <SkillTopicInput
-        label="Skills"
-        newItem={newSkill}
-        setNewItem={setNewSkill}
-        handleAdd={handleAddSkill}
-        items={user.skills}
-        handleRemove={handleRemoveSkill}
-      />
-
-      {/* Mentorship Topics Section */}
-      <SkillTopicInput
-        label="Mentorship Topics"
-        newItem={newTopic}
-        setNewItem={setNewTopic}
-        handleAdd={handleAddTopic}
-        items={user.mentorshipTopics}
-        handleRemove={handleRemoveTopic}
-      />
-
-      {/* Bio Section */}
-      <textarea
-        name="bio"
-        value={user.bio}
-        onChange={handleInput}
-        className="shadow-xl w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-        placeholder="Short Bio"
-      />
-
-      <button
-        type="submit"
-        className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
-        disabled={loading}
-      >
-        {loading ? "Registering..." : "Register"}
-      </button>
-      <p className="text-center mt-4 text-gray-600">
-          Already registered? <Link to="/mentor-login" className="text-[#ed1f26] font-semibold hover:underline">Login</Link>
-        </p>
+      {/* Step 5: Bio Section */}
+      {step === 5 && (
+        <motion.div
+          initial={{ opacity: 0, x: -100 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <InputField
+            icon={faUser}
+            type="text"
+            name="bio"
+            value={user.bio}
+            onChange={handleInput}
+            placeholder="Bio"
+            required
+          />
+          <button
+            type="submit"
+            className="w-full py-3 px-4 bg-green-600 text-white rounded-2xl hover:bg-green-700 mt-4"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+          <button
+            type="button"
+            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
+            onClick={prevStep}
+          >
+            Back
+          </button>
+        </motion.div>
+      )}
     </form>
   );
 };
-// Input Field Component
-const InputField = ({ icon, type, name, value, onChange, placeholder, required = false }) => (
-  <div className="relative">
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="shadow-xl peer h-full w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-      required={required}
-    />
-    <label className="absolute left-3 top-0.5 text-sm text-gray-800 transition-all peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-600 peer-focus:-top-2.5 peer-focus:text-red-600">
-      <FontAwesomeIcon icon={icon} /> {placeholder}
-    </label>
+
+const InputField = ({ icon, type, name, value, onChange, placeholder, required }) => (
+  <div className="flex flex-col gap-2">
+    <div className="flex items-center gap-2">
+      <FontAwesomeIcon icon={icon} className="text-gray-500" />
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 focus:outline-none focus:border-red-600"
+        required={required}
+      />
+    </div>
   </div>
 );
 
-// Skill and Topic Input Component
 const SkillTopicInput = ({ label, newItem, setNewItem, handleAdd, items, handleRemove }) => (
-  <div className="flex flex-col gap-4 mt-4">
-    <div className="relative">
+  <div className="flex flex-col gap-6">
+    <h3 className="font-bold text-lg">{label}</h3>
+    <div className="flex items-center gap-4">
       <input
         type="text"
         value={newItem}
         onChange={(e) => setNewItem(e.target.value)}
-        className="shadow-xl peer h-full w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-        placeholder={`Add a ${label.toLowerCase()}`}
+        className="py-2 px-4 border-2 border-gray-300 rounded-2xl"
+        placeholder={`Add a ${label.toLowerCase()}...`}
       />
       <button
         type="button"
         onClick={handleAdd}
-        className="mt-2 w-full py-2 px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+        className="py-2 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
       >
-        Add {label}
+        Add
       </button>
     </div>
-    <div className="flex flex-wrap gap-2">
+    <ul className="list-disc ml-6">
       {items.map((item, index) => (
-        <span
-          key={index}
-          className="inline-block px-3 py-1 bg-gray-200 rounded-full text-sm text-gray-800"
-        >
+        <li key={index} className="flex justify-between">
           {item}
           <button
             type="button"
-            className="ml-2 text-red-600"
-            onClick={() => handleRemove(item)}
+            onClick={() => handleRemove(index)}
+            className="text-red-600"
           >
-            x
+            Remove
           </button>
-        </span>
+        </li>
       ))}
-    </div>
+    </ul>
   </div>
-
-
 );
 
 export default MentorRegister;

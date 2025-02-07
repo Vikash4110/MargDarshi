@@ -1,0 +1,21 @@
+.arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 20px solid #000; /* Adjust color as needed */
+    position: relative;
+    margin-left: -10px; /* Adjust to center arrow */
+}
+
+/* Optional: Add curvy line effect using pseudo-elements */
+.arrow-down::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -30px; /* Adjust to position arrow correctly */
+    width: 2px;
+    height: 30px;
+    background: #000; /* Adjust color as needed */
+    transform: translateX(-50%);
+}

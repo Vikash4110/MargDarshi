@@ -13,5 +13,6 @@ router.route("/mentor-login").post(validate(loginSchema), mentorControllers.logi
 
 // User details route (protected)
 router.route("/mentor-user").get(mentorMiddleware, mentorControllers.mentor);
+router.route("/mentor-update").patch(mentorMiddleware, mentorControllers.updateUser);
 
 module.exports = router;

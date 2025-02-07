@@ -4,6 +4,8 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import sliderImg from '../assets/sliderImage.jpg';
 import './Slider.css'; // Ensure custom styles are in the appropriate file
+import { FaArrowRightLong , FaArrowLeftLong  } from "react-icons/fa6";
+
 
 // Custom next and previous button components
 const NextArrow = ({ onClick }) => (
@@ -11,14 +13,14 @@ const NextArrow = ({ onClick }) => (
     className="custom-next-arrow"
     style={{
       position: 'absolute',
-      bottom: '10px',
-      right: '40px',
+      bottom: '-70px',
+      right: '30px',
       zIndex: 2,
       cursor: 'pointer',
     }}
     onClick={onClick}
   >
-    ➡️
+    <FaArrowRightLong />
   </div>
 );
 
@@ -27,14 +29,14 @@ const PrevArrow = ({ onClick }) => (
     className="custom-prev-arrow"
     style={{
       position: 'absolute',
-      bottom: '10px',
+      bottom: '-70px',
       right: '80px',
       zIndex: 2,
       cursor: 'pointer',
     }}
     onClick={onClick}
   >
-    ⬅️
+    <FaArrowLeftLong />
   </div>
 );
 
@@ -52,25 +54,25 @@ const mentors = [
     image: sliderImg, 
   },
   {
-    name: 'Nguyễn Thuy',
+    name: 'Nguyn Thuy',
     title: 'Android Development',
     company: 'Airbnb',
     image: sliderImg, 
   },
   {
-    name: 'Nguyễn Thuy',
+    name: 'Nguyn Thuy',
     title: 'Android Development',
     company: 'Airbnb',
     image: sliderImg, 
   },
   {
-    name: 'Nguyễn Thuy',
+    name: 'Nguyn Thuy',
     title: 'Android Development',
     company: 'Airbnb',
     image: sliderImg, 
   },
   {
-    name: 'Nguyễn Thuy',
+    name: 'Nguyn Thuy',
     title: 'Android Development',
     company: 'Airbnb',
     image: sliderImg, 
@@ -107,7 +109,7 @@ const MentorMenteeSpotlight = () => {
   };
 
   return (
-    <section id="spotlight" className="py-12 bg-gray-100">
+    <section id="spotlight" className="py-12 bg-white">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-8 ">Our Expert <span className='relative text-[#127c71]'>Mentors<svg className="absolute -top-3 -right-8 w-6 md:w-8 h-auto" viewBox="0 0 3183 3072">
                     <path fill="#127C71" d="M2600 224c0,0 0,0 0,0 236,198 259,562 52,809 -254,303 -1849,2089 -2221,1776 -301,-190 917,-1964 1363,-2496 207,-247 570,-287 806,-89z" />
@@ -117,11 +119,11 @@ const MentorMenteeSpotlight = () => {
 
         <Slider {...settings} className="mb-12 custom-slider">
           {mentors.map((mentor, index) => (
-            <div key={index} className="slide-item bg-white p-6 rounded-lg shadow-lg hover:scale-105">
+            <div key={index} className="slide-item bg-[#f2f5f5] p-6 rounded-lg shadow-lg  border border-[#127c71]">
               <img
                 src={mentor.image}
                 alt={mentor.name}
-                className="w-32 h-32 object-cover rounded-full mx-auto mb-4"
+                className="w-32 h-32 object-cover rounded-full border-2 border-[#127c71] mx-auto mb-4"
               />
               <h4 className="text-xl font-semibold text-primary mb-2">{mentor.name}</h4>
               <p className="text-gray-600 mb-2">{mentor.title}</p>

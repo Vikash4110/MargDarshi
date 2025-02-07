@@ -88,4 +88,43 @@ const mentor = async (req, res) => {
     }
 };
 
-module.exports = { register, login, mentor };
+// Update mentor details (without changing password)
+const updateUser = async (req, res) => {
+    try {
+        const { fullName, email, phoneNumber, jobTitle, industry, yearsOfExperience, company, linkedInUrl, skills, mentorshipTopics, bio } = req.body;
+        const mentorId = req.user._id;
+
+        // Find the mentor by ID
+        const mentor = await Mentor.findById(mentorId);
+
+        if (!mentor) {
+            return res.status(404).json({ message: "Mentor not found" });
+        }
+
+        // Update mentor details
+        mentor.fullName = fullName || mentor.fullName;
+        mentor.email = email || mentor.email;
+        mentor.phoneNumber = phoneNumber || mentor.phoneNumber;
+        mentor.jobTitle = jobTitle || mentor.jobTitle;
+        mentor.industry = industry || mentor.industry;
+        mentor.yearsOfExperience = yearsOfExperience || mentor.yearsOfExperience;
+        mentor.company = company || mentor.company;
+        mentor.linkedInUrl = linkedInUrl || mentor.linkedInUrl;
+        mentor.skills = skills || mentor.skills;
+        mentor.mentorshipTopics = mentorshipTopics || mentor.mentorshipTopics;
+        mentor.bio = bio || mentor.bio;
+
+        // Save updated mentor details
+        await mentor.save();
+
+        res.status(200).json({
+            message: "Profile updated successfully",
+            updatedMentor: mentor,
+        });
+    } catch (err) {
+        console.error("Error updating mentor:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+module.exports = { register, login, mentor, updateUser };

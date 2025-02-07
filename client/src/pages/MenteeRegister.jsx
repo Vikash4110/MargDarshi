@@ -3,13 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/auth";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUser,
-  faPhone,
-  faBuilding,
-  faEnvelope,
-} from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
+import { faUser, faPhone, faBuilding, faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { motion } from "framer-motion";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -23,26 +18,28 @@ const MenteeRegister = () => {
     currentEducationLevel: "",
     universityName: "",
     fieldOfStudy: "",
-    careerInterests: "",
-    desiredIndustry: "",
-    skillsToDevelop: [], // Initialize as array
-    mentorshipTopics: [], // Initialize as array
+    expectedGraduationYear: "",
+    careerInterests: [],
+    desiredIndustry: [],
+    skillsToDevelop: [],
+    typeOfMentorshipSought: [],
+    preferredDaysAndTimes: [],
+    preferredMentorshipMode: "",
+    personalIntroduction: "",
     linkedInProfileUrl: "",
-    bio: "",
   });
 
   const [newSkill, setNewSkill] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [loading, setLoading] = useState(false);
   const { storeTokenInLS } = useAuth();
+  const [step, setStep] = useState(1); // Step tracking
 
-  // Handle input change
   const handleInput = (e) => {
     const { name, value } = e.target;
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add new skill to array
   const handleAddSkill = () => {
     const trimmedSkill = newSkill.trim();
     if (trimmedSkill && !user.skillsToDevelop.includes(trimmedSkill)) {
@@ -54,19 +51,17 @@ const MenteeRegister = () => {
     }
   };
 
-  // Add new mentorship topic to array
   const handleAddTopic = () => {
     const trimmedTopic = newTopic.trim();
-    if (trimmedTopic && !user.mentorshipTopics.includes(trimmedTopic)) {
+    if (trimmedTopic && !user.typeOfMentorshipSought.includes(trimmedTopic)) {
       setUser((prev) => ({
         ...prev,
-        mentorshipTopics: [...prev.mentorshipTopics, trimmedTopic],
+        typeOfMentorshipSought: [...prev.typeOfMentorshipSought, trimmedTopic],
       }));
       setNewTopic("");
     }
   };
 
-  // Remove skill from array
   const handleRemoveSkill = (skill) => {
     setUser((prev) => ({
       ...prev,
@@ -74,18 +69,15 @@ const MenteeRegister = () => {
     }));
   };
 
-  // Remove mentorship topic from array
   const handleRemoveTopic = (topic) => {
     setUser((prev) => ({
       ...prev,
-      mentorshipTopics: prev.mentorshipTopics.filter((t) => t !== topic),
+      typeOfMentorshipSought: prev.typeOfMentorshipSought.filter((t) => t !== topic),
     }));
   };
 
-  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!backendUrl) {
       toast.error("Backend URL is not defined. Please check your environment variables.");
       return;
@@ -94,17 +86,22 @@ const MenteeRegister = () => {
     setLoading(true);
 
     try {
-      // Validate that skills and topics are arrays
-      if (!Array.isArray(user.skillsToDevelop) || !Array.isArray(user.mentorshipTopics)) {
-        throw new Error("Skills and topics must be arrays");
-      }
+      const formData = {
+        ...user,
+        skillsToDevelop: user.skillsToDevelop.length ? user.skillsToDevelop : [],
+        typeOfMentorshipSought: user.typeOfMentorshipSought.length ? user.typeOfMentorshipSought : [],
+        preferredDaysAndTimes: user.preferredDaysAndTimes.length ? user.preferredDaysAndTimes : [],
+        careerInterests: user.careerInterests.length ? user.careerInterests : [],
+        desiredIndustry: user.desiredIndustry.length ? user.desiredIndustry : [],
+        expectedGraduationYear: Number(user.expectedGraduationYear),
+      };
 
       const response = await fetch(`${backendUrl}/api/auth/mentee-register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(formData),
       });
 
       const resData = await response.json();
@@ -116,7 +113,6 @@ const MenteeRegister = () => {
       storeTokenInLS(resData.token);
       toast.success("Registered Successfully");
 
-      // Reset form after successful registration
       setUser({
         fullName: "",
         email: "",
@@ -125,17 +121,19 @@ const MenteeRegister = () => {
         currentEducationLevel: "",
         universityName: "",
         fieldOfStudy: "",
-        careerInterests: "",
-        desiredIndustry: "",
+        expectedGraduationYear: "",
+        careerInterests: [],
+        desiredIndustry: [],
         skillsToDevelop: [],
-        mentorshipTopics: [],
+        typeOfMentorshipSought: [],
+        preferredDaysAndTimes: [],
+        preferredMentorshipMode: "",
+        personalIntroduction: "",
         linkedInProfileUrl: "",
-        bio: "",
       });
 
-      navigate("/");
+      navigate("/mentee-user");
     } catch (error) {
-      console.error("Registration error: ", error);
       toast.error(error.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -145,184 +143,177 @@ const MenteeRegister = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 w-full max-w-lg mx-auto mt-6 text-center border-2 rounded-3xl py-10 lg:py-12 px-6 lg:px-10 shadow-2xl"
+      className="flex flex-col gap-6 w-full max-w-lg mx-auto mt-6 text-center border-2 rounded-3xl py-10 lg:py-12 px-6 lg:px-10 shadow-2xl"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Full Name */}
-        <InputField
-          icon={faUser}
-          type="text"
-          name="fullName"
-          value={user.fullName}
-          onChange={handleInput}
-          placeholder="Full Name"
-          required
-        />
+      {/* Step 1: Personal Information */}
+      {step === 1 && (
+        <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <InputField icon={faUser} type="text" name="fullName" value={user.fullName} onChange={handleInput} placeholder="Full Name" required />
+          <InputField icon={faEnvelope} type="email" name="email" value={user.email} onChange={handleInput} placeholder="Email" required />
+          <InputField icon={faUser} type="password" name="password" value={user.password} onChange={handleInput} placeholder="Password" required />
+          <InputField icon={faPhone} type="text" name="phoneNumber" value={user.phoneNumber} onChange={handleInput} placeholder="Phone Number" required />
+          <div className="flex justify-between gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
+            >
+              Next
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Email */}
-        <InputField
-          icon={faEnvelope}
-          type="email"
-          name="email"
-          value={user.email}
-          onChange={handleInput}
-          placeholder="Email"
-          required
-        />
+      {/* Step 2: Education and LinkedIn */}
+      {step === 2 && (
+        <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <InputField icon={faBuilding} type="text" name="currentEducationLevel" value={user.currentEducationLevel} onChange={handleInput} placeholder="Education Level" required />
+          <InputField icon={faBuilding} type="text" name="fieldOfStudy" value={user.fieldOfStudy} onChange={handleInput} placeholder="Field of Study" required />
+          <InputField icon={faUser} type="number" name="expectedGraduationYear" value={user.expectedGraduationYear} onChange={handleInput} placeholder="Expected Graduation Year" required />
+          <InputField icon={faUser} type="url" name="linkedInProfileUrl" value={user.linkedInProfileUrl} onChange={handleInput} placeholder="LinkedIn Profile URL" />
+          <div className="flex justify-between gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
+            >
+              Next
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Password */}
-        <InputField
-          icon={faUser}
-          type="password"
-          name="password"
-          value={user.password}
-          onChange={handleInput}
-          placeholder="Password"
-          required
-        />
+      {/* Step 3: Skills */}
+      {step === 3 && (
+        <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <SkillTopicInput label="Skills to Develop" newItem={newSkill} setNewItem={setNewSkill} handleAdd={handleAddSkill} items={user.skillsToDevelop} handleRemove={handleRemoveSkill} />
+          <div className="flex justify-between gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setStep(2)}
+              className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
+            >
+              Next
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Phone Number */}
-        <InputField
-          icon={faPhone}
-          type="text"
-          name="phoneNumber"
-          value={user.phoneNumber}
-          onChange={handleInput}
-          placeholder="Phone Number"
-          required
-        />
+      {/* Step 4: Mentorship Topics */}
+      {step === 4 && (
+        <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <SkillTopicInput label="Mentorship Topics" newItem={newTopic} setNewItem={setNewTopic} handleAdd={handleAddTopic} items={user.typeOfMentorshipSought} handleRemove={handleRemoveTopic} />
+          <div className="flex justify-between gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setStep(3)}
+              className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep(5)}
+              className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
+            >
+              Next
+            </button>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Education Level */}
-        <InputField
-          icon={faBuilding}
-          type="text"
-          name="currentEducationLevel"
-          value={user.currentEducationLevel}
-          onChange={handleInput}
-          placeholder="Current Education Level"
-          required
-        />
-
-        {/* Field of Study */}
-        <InputField
-          icon={faBuilding}
-          type="text"
-          name="fieldOfStudy"
-          value={user.fieldOfStudy}
-          onChange={handleInput}
-          placeholder="Field of Study"
-          required
-        />
-
-        {/* LinkedIn Profile */}
-        <InputField
-          icon={faUser}
-          type="url"
-          name="linkedInProfileUrl"
-          value={user.linkedInProfileUrl}
-          onChange={handleInput}
-          placeholder="LinkedIn Profile URL"
-        />
-      </div>
-
-      {/* Skills Section */}
-      <SkillTopicInput
-        label="Skills"
-        newItem={newSkill}
-        setNewItem={setNewSkill}
-        handleAdd={handleAddSkill}
-        items={user.skillsToDevelop}
-        handleRemove={handleRemoveSkill}
-      />
-
-      {/* Mentorship Topics Section */}
-      <SkillTopicInput
-        label="Mentorship Topics"
-        newItem={newTopic}
-        setNewItem={setNewTopic}
-        handleAdd={handleAddTopic}
-        items={user.mentorshipTopics}
-        handleRemove={handleRemoveTopic}
-      />
-
-      {/* Bio Section */}
-      <textarea
-        name="bio"
-        value={user.bio}
-        onChange={handleInput}
-        className="shadow-xl w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-        placeholder="Short Bio"
-      />
-
-      <button
-        type="submit"
-        className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
-        disabled={loading}
-      >
-        {loading ? "Registering..." : "Register"}
-      </button>
-      <p className="text-center mt-4 text-gray-600">
-        Already registered?{" "}
-        <Link to="/mentee-login" className="text-red-600 font-semibold hover:underline">
-          Login
-        </Link>
-      </p>
+      {/* Step 5: Personal Introduction */}
+      {step === 5 && (
+        <motion.div initial={{ opacity: 0, x: -100 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+          <textarea
+            name="personalIntroduction"
+            value={user.personalIntroduction}
+            onChange={handleInput}
+            className="shadow-xl w-full rounded-xl border border-gray-300 p-4"
+            placeholder="Write a brief personal introduction"
+            rows={5}
+          />
+          <div className="flex justify-between gap-4 mt-4">
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 px-4 bg-red-600 text-white rounded-2xl ${loading ? "cursor-not-allowed" : "hover:bg-red-700"}`}
+            >
+              {loading ? "Registering..." : "Register"}
+            </button>
+          </div>
+        </motion.div>
+      )}
     </form>
   );
 };
 
-// Input Field Component
-const InputField = ({ icon, type, name, value, onChange, placeholder, required = false }) => (
-  <div className="relative">
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="shadow-xl peer h-full w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-      required={required}
-    />
-    <label className="absolute left-3 top-0.5 text-sm text-gray-800 transition-all peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-gray-600 peer-focus:-top-2.5 peer-focus:text-red-600">
-      <FontAwesomeIcon icon={icon} /> {placeholder}
-    </label>
+const InputField = ({ icon, ...props }) => (
+  <div className="flex items-center gap-4 bg-white border border-gray-300 rounded-2xl shadow-xl py-3 px-5">
+    <FontAwesomeIcon icon={icon} />
+    <input {...props} className="w-full focus:outline-none" />
   </div>
 );
 
-// Skill and Topic Input Component
 const SkillTopicInput = ({ label, newItem, setNewItem, handleAdd, items, handleRemove }) => (
-  <div className="relative w-full">
-    <label className="block mb-2 text-gray-800">{label}</label>
-    <div className="flex flex-col gap-2">
-      <div className="flex gap-2 items-center">
-        <input
-          type="text"
-          value={newItem}
-          onChange={(e) => setNewItem(e.target.value)}
-          className="shadow-xl peer h-full w-full rounded-xl border border-gray-300 bg-transparent px-3 py-3 text-sm text-gray-700 outline-none transition-all focus:border-2 focus:border-red-600"
-          placeholder={`Add new ${label}`}
-        />
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700"
-        >
-          Add
-        </button>
-      </div>
-      <ul className="list-disc pl-5">
-        {items.map((item, index) => (
-          <li key={index} className="flex justify-between items-center">
-            <span>{item}</span>
-            <button
-              type="button"
-              onClick={() => handleRemove(item)}
-              className="text-red-600 hover:text-red-800"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+  <div className="flex flex-col gap-4">
+    <div className="flex gap-4 items-center">
+      <input
+        type="text"
+        value={newItem}
+        onChange={(e) => setNewItem(e.target.value)}
+        className="flex-1 px-4 py-2 rounded-lg border border-gray-300"
+        placeholder={`Add ${label}`}
+      />
+      <button
+        type="button"
+        onClick={handleAdd}
+        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+      >
+        Add
+      </button>
+    </div>
+    <div className="flex flex-wrap gap-2 mt-4">
+      {items.map((item, idx) => (
+        <div key={idx} className="flex items-center bg-gray-200 py-1 px-3 rounded-full">
+          <span>{item}</span>
+          <button
+            type="button"
+            onClick={() => handleRemove(item)}
+            className="ml-2 text-red-600 hover:text-red-700"
+          >
+            x
+          </button>
+        </div>
+      ))}
     </div>
   </div>
 );
