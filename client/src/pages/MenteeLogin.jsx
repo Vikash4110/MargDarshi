@@ -42,7 +42,7 @@ const MenteeLogin = ({ setIsLoggedIn }) => {
       if (response.ok) {
         storeTokenInLS(responseData.token);
         toast.success("Login Successful");
-        navigate("/mentee-user");
+        navigate("/mentors");
       } else {
         toast.error(responseData.message || "Invalid Credentials");
       }

@@ -14,4 +14,8 @@ router.post('/mentee-login', validate(MenteeLoginSchema), menteeControllers.logi
 // User details route (protected)
 router.get('/mentee-user', menteeMiddleware, menteeControllers.mentee);
 
+router.route("/mentee-update").patch(menteeMiddleware, menteeControllers.updateUser);
+router.get("/mentee-matching-mentors", menteeMiddleware, menteeControllers.getMatchingMentors);
+router.post("/mentee-send-request", menteeMiddleware, menteeControllers.sendConnectionRequest);
+router.get("/mentee-connected-mentors", menteeMiddleware, menteeControllers.getConnectedMentors);
 module.exports = router;

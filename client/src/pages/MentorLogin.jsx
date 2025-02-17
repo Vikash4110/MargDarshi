@@ -41,7 +41,7 @@ const MentorLogin = ({ setIsLoggedIn }) => {
       if (response.ok) {
         storeTokenInLS(responseData.token);
         toast.success("Login Successful");
-        navigate("/");
+        navigate("/mentor-show");
       } else {
         toast.error(responseData.message || "Invalid Credentials");
       }

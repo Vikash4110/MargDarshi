@@ -1,141 +1,190 @@
 import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../store/auth";
+
 import { toast } from "react-toastify";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import {
   faUser,
-  faMobile,
-  faBuilding,
-  faListOl,
   faPhone,
+  faBuilding,
   faEnvelope,
+  faListOl,
 } from "@fortawesome/free-solid-svg-icons";
-import { motion } from "framer-motion"; // Import Framer Motion for transitions
+
+import { motion } from "framer-motion";
 
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-const MentorRegister = ({ setIsLoggedIn }) => {
+const MentorRegister = () => {
   const navigate = useNavigate();
+
   const [user, setUser] = useState({
     fullName: "",
+
     email: "",
+
     password: "",
+
     phoneNumber: "",
+
     jobTitle: "",
+
     industry: "",
+
     yearsOfExperience: "",
+
     company: "",
+
     linkedInUrl: "",
+
     skills: [],
+
     mentorshipTopics: [],
+
     bio: "",
   });
+
   const [newSkill, setNewSkill] = useState("");
+
   const [newTopic, setNewTopic] = useState("");
+
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // Manage form step
+
+  const [step, setStep] = useState(1);
+
   const { storeTokenInLS } = useAuth();
 
-  // Handle input changes
   const handleInput = (e) => {
     const { name, value } = e.target;
+
     setUser((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add skill to skills array
   const handleAddSkill = () => {
-    if (newSkill.trim() && !user.skills.includes(newSkill.trim())) {
+    const trimmedSkill = newSkill.trim();
+
+    if (trimmedSkill && !user.skills.includes(trimmedSkill)) {
       setUser((prev) => ({
         ...prev,
-        skills: [...prev.skills, newSkill.trim()],
+
+        skills: [...prev.skills, trimmedSkill],
       }));
+
       setNewSkill("");
     }
   };
 
-  // Add topic to mentorship topics array
   const handleAddTopic = () => {
-    if (newTopic.trim() && !user.mentorshipTopics.includes(newTopic.trim())) {
+    const trimmedTopic = newTopic.trim();
+
+    if (trimmedTopic && !user.mentorshipTopics.includes(trimmedTopic)) {
       setUser((prev) => ({
         ...prev,
-        mentorshipTopics: [...prev.mentorshipTopics, newTopic.trim()],
+
+        mentorshipTopics: [...prev.mentorshipTopics, trimmedTopic],
       }));
+
       setNewTopic("");
     }
   };
 
-  // Remove skill
-  const handleRemoveSkill = (index) => {
-    const updatedSkills = user.skills.filter((_, i) => i !== index);
-    setUser((prev) => ({ ...prev, skills: updatedSkills }));
+  const handleRemoveSkill = (skill) => {
+    setUser((prev) => ({
+      ...prev,
+
+      skills: prev.skills.filter((s) => s !== skill),
+    }));
   };
 
-  // Remove mentorship topic
-  const handleRemoveTopic = (index) => {
-    const updatedTopics = user.mentorshipTopics.filter((_, i) => i !== index);
-    setUser((prev) => ({ ...prev, mentorshipTopics: updatedTopics }));
+  const handleRemoveTopic = (topic) => {
+    setUser((prev) => ({
+      ...prev,
+
+      mentorshipTopics: prev.mentorshipTopics.filter((t) => t !== topic),
+    }));
   };
 
-  // Handle next step
-  const nextStep = () => {
-    setStep((prevStep) => prevStep + 1);
-  };
-
-  // Handle previous step
-  const prevStep = () => {
-    setStep((prevStep) => prevStep - 1);
-  };
-
-  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!backendUrl) {
-      toast.error("Backend URL is not defined. Please check your environment variables.");
+      toast.error(
+        "Backend URL is not defined. Please check your environment variables."
+      );
+
+      return;
     }
 
     setLoading(true);
 
     try {
-      const formattedUser = {
+      const formData = {
         ...user,
-        yearsOfExperience: Number(user.yearsOfExperience), // Parse to number
+
+        skills: user.skills.length ? user.skills : [],
+
+        mentorshipTopics: user.mentorshipTopics.length
+          ? user.mentorshipTopics
+          : [],
+
+        yearsOfExperience: Number(user.yearsOfExperience),
       };
 
       const response = await fetch(`${backendUrl}/api/auth/mentor-register`, {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formattedUser),
+
+        body: JSON.stringify(formData),
       });
 
-      const res_data = await response.json();
+      const resData = await response.json();
 
       if (!response.ok) {
-        throw new Error(res_data.extraDetails || res_data.message || "Registration failed");
+        throw new Error(
+          resData.extraDetails || resData.message || "Registration failed"
+        );
       }
 
-      storeTokenInLS(res_data.token);
+      storeTokenInLS(resData.token);
+
+      toast.success("Registered Successfully");
+
       setUser({
         fullName: "",
+
         email: "",
+
         password: "",
+
         phoneNumber: "",
+
         jobTitle: "",
+
         industry: "",
+
         yearsOfExperience: "",
+
         company: "",
+
         linkedInUrl: "",
+
         skills: [],
+
         mentorshipTopics: [],
+
         bio: "",
       });
-      toast.success("Registered Successfully");
-      navigate("/mentor-user");
+
+      navigate("/mentor-show");
     } catch (error) {
-      console.error("Registration error: ", error);
       toast.error(error.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -143,18 +192,40 @@ const MentorRegister = ({ setIsLoggedIn }) => {
   };
 
   return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-blue-50 to-purple-50 p-4">
+    <h1 className="text-black text-5xl font-bold text-center mb-6">Mentor Register</h1>
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-4 w-full max-w-lg mx-auto mt-6 text-center border-2 rounded-3xl py-10 lg:py-12 px-6 lg:px-10 shadow-2xl"
+      className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl p-8 lg:p-12"
     >
-      {/* Step 1: Personal Information */}
-      {step === 1 && (
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Progress Indicator */}
+
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <div
+                key={s}
+                className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  step >= s
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                {s}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 1: Personal Information */}
+
+        {step === 1 && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
             <InputField
               icon={faUser}
               type="text"
@@ -164,6 +235,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Full Name"
               required
             />
+
             <InputField
               icon={faEnvelope}
               type="email"
@@ -173,6 +245,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Email"
               required
             />
+
             <InputField
               icon={faUser}
               type="password"
@@ -182,6 +255,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Password"
               required
             />
+
             <InputField
               icon={faPhone}
               type="text"
@@ -191,25 +265,36 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Phone Number"
               required
             />
-          </div>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
-            onClick={nextStep}
-          >
-            Next
-          </button>
-        </motion.div>
-      )}
 
-      {/* Step 2: Job and Company Information */}
-      {step === 2 && (
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex justify-between gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500 transition-all"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl hover:from-red-700 hover:to-red-800 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 2: Job and Company Information */}
+
+        {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
             <InputField
               icon={faBuilding}
               type="text"
@@ -219,6 +304,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Job Title"
               required
             />
+
             <InputField
               icon={faBuilding}
               type="text"
@@ -228,6 +314,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Industry"
               required
             />
+
             <InputField
               icon={faListOl}
               type="number"
@@ -237,6 +324,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               placeholder="Years of Experience"
               required
             />
+
             <InputField
               icon={faBuilding}
               type="text"
@@ -245,6 +333,7 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               onChange={handleInput}
               placeholder="Company"
             />
+
             <InputField
               icon={faUser}
               type="url"
@@ -253,174 +342,202 @@ const MentorRegister = ({ setIsLoggedIn }) => {
               onChange={handleInput}
               placeholder="LinkedIn URL"
             />
-          </div>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
-            onClick={nextStep}
-          >
-            Next
-          </button>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
-            onClick={prevStep}
-          >
-            Back
-          </button>
-        </motion.div>
-      )}
 
-      {/* Step 3: Add Skills */}
-      {step === 3 && (
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <SkillTopicInput
-            label="Skills"
-            newItem={newSkill}
-            setNewItem={setNewSkill}
-            handleAdd={handleAddSkill}
-            items={user.skills}
-            handleRemove={handleRemoveSkill}
-          />
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
-            onClick={nextStep}
-          >
-            Next
-          </button>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
-            onClick={prevStep}
-          >
-            Back
-          </button>
-        </motion.div>
-      )}
+            <div className="flex justify-between gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500 transition-all"
+              >
+                Back
+              </button>
 
-      {/* Step 4: Add Mentorship Topics */}
-      {step === 4 && (
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <SkillTopicInput
-            label="Mentorship Topics"
-            newItem={newTopic}
-            setNewItem={setNewTopic}
-            handleAdd={handleAddTopic}
-            items={user.mentorshipTopics}
-            handleRemove={handleRemoveTopic}
-          />
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700 mt-4"
-            onClick={nextStep}
-          >
-            Next
-          </button>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
-            onClick={prevStep}
-          >
-            Back
-          </button>
-        </motion.div>
-      )}
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl hover:from-red-700 hover:to-red-800 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-      {/* Step 5: Bio Section */}
-      {step === 5 && (
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <InputField
-            icon={faUser}
-            type="text"
-            name="bio"
-            value={user.bio}
-            onChange={handleInput}
-            placeholder="Bio"
-            required
-          />
-          <button
-            type="submit"
-            className="w-full py-3 px-4 bg-green-600 text-white rounded-2xl hover:bg-green-700 mt-4"
-            disabled={loading}
+        {/* Step 3: Skills */}
+
+        {step === 3 && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
           >
-            {loading ? "Registering..." : "Register"}
-          </button>
-          <button
-            type="button"
-            className="w-full py-3 px-4 bg-gray-500 text-white rounded-2xl hover:bg-gray-600 mt-4"
-            onClick={prevStep}
+            <SkillTopicInput
+              label="Skills"
+              newItem={newSkill}
+              setNewItem={setNewSkill}
+              handleAdd={handleAddSkill}
+              items={user.skills}
+              handleRemove={handleRemoveSkill}
+            />
+
+            <div className="flex justify-between gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500 transition-all"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl hover:from-red-700 hover:to-red-800 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 4: Mentorship Topics */}
+
+        {step === 4 && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
           >
-            Back
-          </button>
-        </motion.div>
-      )}
-    </form>
+            <SkillTopicInput
+              label="Mentorship Topics"
+              newItem={newTopic}
+              setNewItem={setNewTopic}
+              handleAdd={handleAddTopic}
+              items={user.mentorshipTopics}
+              handleRemove={handleRemoveTopic}
+            />
+
+            <div className="flex justify-between gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500 transition-all"
+              >
+                Back
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(5)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl hover:from-red-700 hover:to-red-800 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 5: Bio Section */}
+
+        {step === 5 && (
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            <textarea
+              name="bio"
+              value={user.bio}
+              onChange={handleInput}
+              className="w-full rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-red-600"
+              placeholder="Write a brief bio"
+              rows={5}
+            />
+
+            <div className="flex justify-between gap-4 mt-8">
+              <button
+                type="button"
+                onClick={() => setStep(4)}
+                className="w-full py-3 px-4 bg-gray-400 text-white rounded-2xl hover:bg-gray-500 transition-all"
+              >
+                Back
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 px-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-2xl ${
+                  loading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:from-red-700 hover:to-red-800"
+                } transition-all`}
+              >
+                {loading ? "Registering..." : "Register"}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </form>
+    </div>
   );
 };
 
-const InputField = ({ icon, type, name, value, onChange, placeholder, required }) => (
-  <div className="flex flex-col gap-2">
-    <div className="flex items-center gap-2">
-      <FontAwesomeIcon icon={icon} className="text-gray-500" />
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 focus:outline-none focus:border-red-600"
-        required={required}
-      />
-    </div>
+const InputField = ({ icon, ...props }) => (
+  <div className="flex items-center gap-4 bg-white border border-gray-300 rounded-2xl shadow-sm py-3 px-5 focus-within:ring-2 focus-within:ring-red-600">
+    <FontAwesomeIcon icon={icon} className="text-gray-500" />
+
+    <input {...props} className="w-full focus:outline-none" />
   </div>
 );
 
-const SkillTopicInput = ({ label, newItem, setNewItem, handleAdd, items, handleRemove }) => (
-  <div className="flex flex-col gap-6">
-    <h3 className="font-bold text-lg">{label}</h3>
-    <div className="flex items-center gap-4">
+const SkillTopicInput = ({
+  label,
+  newItem,
+  setNewItem,
+  handleAdd,
+  items,
+  handleRemove,
+}) => (
+  <div className="flex flex-col gap-4">
+    <div className="flex gap-4 items-center">
       <input
         type="text"
         value={newItem}
         onChange={(e) => setNewItem(e.target.value)}
-        className="py-2 px-4 border-2 border-gray-300 rounded-2xl"
-        placeholder={`Add a ${label.toLowerCase()}...`}
+        className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-600"
+        placeholder={`Add ${label}`}
       />
+
       <button
         type="button"
         onClick={handleAdd}
-        className="py-2 px-4 bg-red-600 text-white rounded-2xl hover:bg-red-700"
+        className="px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all"
       >
         Add
       </button>
     </div>
-    <ul className="list-disc ml-6">
-      {items.map((item, index) => (
-        <li key={index} className="flex justify-between">
-          {item}
+
+    <div className="flex flex-wrap gap-2 mt-4">
+      {items.map((item, idx) => (
+        <div
+          key={idx}
+          className="flex items-center bg-gray-200 py-1 px-3 rounded-full"
+        >
+          <span>{item}</span>
+
           <button
             type="button"
-            onClick={() => handleRemove(index)}
-            className="text-red-600"
+            onClick={() => handleRemove(item)}
+            className="ml-2 text-red-600 hover:text-red-700"
           >
-            Remove
+            x
           </button>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   </div>
 );
 

@@ -27,7 +27,7 @@ const Navbar = () => {
         <div className="hidden md:flex space-x-8 text-lg font-medium">
           <Link to="/" className="hover:text-[#127C71] transition">Home</Link>
           <Link to="/about" className="hover:text-[#127C71] transition">About</Link>
-          <Link to="/mentors" className="hover:text-[#127C71] transition">Mentors</Link>
+          {/* <Link to="/mentors" className="hover:text-[#127C71] transition">Mentors</Link> */}
           <Link to="/contact" className="hover:text-[#127C71] transition flex items-center">Contact</Link>
         </div>
 
@@ -67,7 +67,7 @@ const Navbar = () => {
         <div className="md:hidden flex flex-col space-y-4 px-4 py-4 bg-white shadow-lg">
           <Link to="/" className="hover:text-[#127C71] transition" onClick={toggleMenu}>Home</Link>
           <Link to="/about" className="hover:text-[#127C71] transition" onClick={toggleMenu}>About</Link>
-          <Link to="/mentors" className="hover:text-[#127C71] transition" onClick={toggleMenu}>Mentors</Link>
+          {/* <Link to="/mentors" className="hover:text-[#127C71] transition" onClick={toggleMenu}>Mentors</Link> */}
           <Link to="/contact" className="hover:text-[#127C71] transition flex items-center" onClick={toggleMenu}>Contact</Link>
 
           <div className="flex flex-col space-y-4 mt-4">

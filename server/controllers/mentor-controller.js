@@ -1,5 +1,8 @@
 const Mentor = require("../models/mentor-model");
+const Mentee = require("../models/mentee-model");
 const bcrypt = require("bcryptjs");
+const ConnectionRequest = require("../models/connection-request-model");
+
 const register = async (req, res) => {
     try {
         const {
@@ -126,5 +129,110 @@ const updateUser = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+const respondToConnectionRequest = async (req, res) => {
+    try {
+      const { requestId, status } = req.body;
+      const mentorId = req.user._id;
+  
+      if (!requestId || !status) {
+        return res.status(400).json({ message: "Request ID and status are required" });
+      }
+  
+      if (!["accepted", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+  
+      // Find the request
+      const request = await ConnectionRequest.findById(requestId).populate(
+        "menteeId"
+      );
+  
+      if (!request) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+  
+      if (request.mentorId.toString() !== mentorId.toString()) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+  
+      // Update the request status
+      request.status = status;
+      await request.save();
+  
+      if (status === "accepted") {
+        // Add mentor to mentee's connectedMentors
+        const mentee = await Mentee.findById(request.menteeId);
+        if (!mentee) {
+          return res.status(404).json({ message: "Mentee not found" });
+        }
+        mentee.connectedMentors.push(mentorId);
+        await mentee.save();
+  
+        // Add mentee to mentor's connectedMentees
+        const mentor = await Mentor.findById(mentorId);
+        if (!mentor) {
+          return res.status(404).json({ message: "Mentor not found" });
+        }
+        mentor.connectedMentees.push(request.menteeId);
+        await mentor.save();
+      }
+  
+      res.status(200).json({ message: `Request ${status}` });
+    } catch (err) {
+      console.error("Error responding to connection request:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
 
-module.exports = { register, login, mentor, updateUser };
+const getAllMentors = async (req, res) => {
+    try {
+        const mentors = await Mentor.find().select("-password"); // Exclude password for security
+        res.status(200).json(mentors);
+    } catch (err) {
+        console.error("Error fetching mentors:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+const getPendingRequests = async (req, res) => {
+    try {
+        const mentorId = req.user._id;
+
+        // Fetch all pending requests for the mentor
+        const pendingRequests = await ConnectionRequest.find({
+            mentorId,
+            status: "pending",
+        }).populate("menteeId", "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy");
+
+        res.status(200).json({ pendingRequests });
+    } catch (err) {
+        console.error("Error fetching pending requests:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+const getConnectedMentees = async (req, res) => {
+    try {
+      const mentorId = req.user._id;
+  
+      // Find the mentor and populate the connectedMentees field
+      const mentor = await Mentor.findById(mentorId).populate(
+        "connectedMentees",
+        "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy"
+      );
+  
+      if (!mentor) {
+        return res.status(404).json({ message: "Mentor not found" });
+      }
+  
+      res.status(200).json({ connectedMentees: mentor.connectedMentees });
+    } catch (err) {
+      console.error("Error fetching connected mentees:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+
+module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees };
+
+
+ 

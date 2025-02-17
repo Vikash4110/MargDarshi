@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../store/auth";
+import { useNavigate } from "react-router-dom"; // Import navigation hook
 import { toast } from "react-toastify";
-
+import { Link } from "react-router-dom";
+ 
 const MenteeProfile = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const { authorizationToken } = useAuth();
+    const navigate = useNavigate(); // Navigation hook
 
     const [mentee, setMentee] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -45,8 +48,16 @@ const MenteeProfile = () => {
     }
 
     return (
-        <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+        <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg relative">
             <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Mentee Profile</h2>
+
+            {/* Edit Button */}
+            <Link
+            to="/mentee-update"
+                className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
+            >
+                Edit Profile
+            </Link>
 
             <div className="flex flex-col items-center">
                 {/* Profile Image */}

@@ -12,6 +12,15 @@ import MenteeLogin from "./pages/MenteeLogin";
 import MentorUser from "./pages/MentorUser";
 import MentorUpdate from "./Components/MentorUpdate";
 import MenteeUser from './pages/MenteeUser';
+import MenteeUpdate from './Components/MenteeUpdate';
+
+import MenteeDashboard from './pages/MenteeDashboard';
+import MentorDashboard from './pages/MentorDashboard';
+import MentorShow from './pages/MentorShow';
+import MentorConnection from './pages/MentorConnection'
+import MenteeAcceptedReq from './pages/MenteeAcceptedReq'
+import VideoCall from './pages/VideoCall';
+
 import LogOut from './Components/LogOut';
 const App = () => {
   return (
@@ -29,6 +38,14 @@ const App = () => {
           <Route path="/mentor-user" element={<MentorUser />} />
           <Route path="/mentee-user" element={<MenteeUser />} />
           <Route path="/mentor-update" element={<MentorUpdate />} />
+          <Route path="/mentee-update" element={<MenteeUpdate />} />
+          <Route path="/mentor-dashboard" element={<MentorDashboard />} />
+          <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
+          <Route path="/mentor-show" element={<MentorShow />} />
+          <Route path="/video-call" element={<VideoCall />} />
+
+          <Route path="/mentor-connection" element={<MentorConnection/>} />
+          <Route path="/mentee-accepted-req" element={<MenteeAcceptedReq/>} />
           <Route path="/logout" element={<LogOut />} />
         </Routes>
     </Router>
