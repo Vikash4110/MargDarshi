@@ -178,7 +178,7 @@ const MenteeAcceptedReq = () => {
                       transition={{ duration: 0.4 }}
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-full border-2 border-teal-500 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white rounded-full border-2 border-teal-500 flex items-center justify-center">
                       <FaUser className="text-gray-400" size={24} />
                     </div>
                   )}

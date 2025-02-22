@@ -147,7 +147,7 @@ const MenteeRegister = () => {
                 profilePicture: null,
             });
 
-            navigate("/mentors");
+            navigate("/mentee-main");
         } catch (error) {
             toast.error(error.message || "An error occurred. Please try again.");
         } finally {

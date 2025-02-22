@@ -3,7 +3,7 @@ import backgroundImage from '../assets/backimg.jpg'
 
 const CallToAction = () => {
   return (
-    <section className=" py-12 px-4 flex flex-col items-center"
+    <section className=" bg-gradient-to-br from-gray-50 to-teal-50 py-12 px-4 flex flex-col items-center"
     style={{
         backgroundImage: `url(${backgroundImage}), linear-gradient(to right, #4b4b4b, #1e1e1e)`,
         backgroundBlendMode: 'overlay',

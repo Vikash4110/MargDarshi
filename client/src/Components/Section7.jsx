@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import faq from '../assets/faq.jpg';
+import faq from '../assets/vecteezy_hands-using-a-smartphone-and-registering-online_8258613.svg';
 import underline from '../assets/curveUnderline.svg';
 
 
@@ -64,7 +64,7 @@ const About = () => {
     };
 
     return (
-        <div className="max-w-md mx-auto rounded-2xl p-8 bg-white shadow-2xl background" data-aos="fade-up" >
+        <div className="max-w-md mx-auto rounded-2xl p-8 bg-gradient-to-br from-gray-50 to-teal-50  " data-aos="fade-up" >
          <h2 className="text-3xl md:text-5xl font-bold leading-tight flex flex-col space-y-4 mb-20 text-center">
             <span className="relative text-primary font-bold bg-transparent">
                 <span className='text-[#127c71]'>FAQ's</span>
@@ -101,7 +101,7 @@ const ContentSection = () => (
 
 const AboutLayout = () => (
 
-    <div className="relative overflow-hidden  ">
+    <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-teal-50 ">
 
         <div className="flex  flex-col lg:flex-row items-center lg:items-start justify-between max-w-6xl mx-auto  px-4  mb-0  mt-32 md:mb-0 lg:mb-24 ">
             <div className='mt-8 lg:mt-12 lg:ml-8 w-5/6 flex-grow lg:w-full order-2 lg:order-1 ' >

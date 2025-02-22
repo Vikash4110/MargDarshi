@@ -5,7 +5,7 @@ import Section2 from "../Components/Section2";
 import Section3 from "../Components/Section3";
 import Section4 from "../Components/Section4";
 import Section5 from "../Components/Section5";
-import Section6main from "../Components/Section6main";
+import Section6 from "../Components/Section6";
 import Section7 from "../Components/Section7";
 import Footer from "../Components/Footer";
 import { FaCommentDots } from "react-icons/fa";
@@ -50,7 +50,7 @@ const Home = () => {
 
       {/* Section6main with AOS */}
       <div data-aos="fade-up" data-aos-delay="600">
-        <Section6main />
+        <Section6 />
       </div>
 
       {/* Section7 with AOS */}
@@ -59,9 +59,9 @@ const Home = () => {
       </div>
 
       {/* MenteeB with AOS */}
-      <div data-aos="fade-up" data-aos-delay="740">
+      {/* <div data-aos="fade-up" data-aos-delay="740">
         <MenteeB />
-      </div>
+      </div> */}
 
       {/* Footer with AOS */}
       <div data-aos="fade-up" data-aos-delay="780">
