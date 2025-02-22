@@ -1,0 +1,16 @@
+/* Rocket Animation */
+.rocket {
+    animation: flyRocket 5s linear infinite; /* Adjust duration as needed */
+}
+
+@keyframes flyRocket {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg); /* Move up and tilt slightly */
+    }
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+}

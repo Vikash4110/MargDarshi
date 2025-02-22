@@ -5,7 +5,7 @@ const connectionRequestSchema = new mongoose.Schema(
     {
         menteeId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Mentee",
+            ref: "Mentee", 
             required: true,
         },
         mentorId: {

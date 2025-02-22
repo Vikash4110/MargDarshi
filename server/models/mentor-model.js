@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+
 const mentorSchema = new mongoose.Schema(
     {
         fullName: { type: String, required: true },
@@ -15,7 +16,7 @@ const mentorSchema = new mongoose.Schema(
         yearsOfExperience: { type: Number, required: true },
         company: { type: String, required: true },
         linkedInUrl: { type: String },
-        skills: [{ type: String, required: true }],
+        skills: [{ type: String, required: true  }],
         mentorshipTopics: [{ type: String, required: true }],
         bio: { type: String, required: true },
         motivation: { type: String },
@@ -32,6 +33,7 @@ const mentorSchema = new mongoose.Schema(
             github: { type: String },
             other: { type: String },
         },
+        calendlyLink: { type: String , default: "" },
         connectedMentees: [
             {
                 type: mongoose.Schema.Types.ObjectId,

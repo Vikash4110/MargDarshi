@@ -5,18 +5,24 @@ const { SignupSchema, loginSchema } = require("../validators/mentor-validator");
 const validate = require("../middlewares/validate-middleware");
 const mentorMiddleware = require("../middlewares/mentor-middleware");
 
-// Registration route
-router.route("/mentor-register").post(validate(SignupSchema), mentorControllers.register);
 
-// Login route
-router.route("/mentor-login").post(validate(loginSchema), mentorControllers.login);
+// router.route("/mentor-register").post(mentorControllers.imageUpload, mentorControllers.register); 
+// Mentor registration route
+router.route("/mentor-register")
+    .post(
+        mentorControllers.imageUpload, // Multer middleware for file upload
+        mentorControllers.register // Registration controller
+    );
 
-// User details route (protected)
-router.route("/mentor-user").get(mentorMiddleware, mentorControllers.mentor);
-router.route("/mentor-update").patch(mentorMiddleware, mentorControllers.updateUser);
+
+router.post("/mentor-login", validate(loginSchema), mentorControllers.login);
+router.get("/mentor-user", mentorMiddleware, mentorControllers.mentor);
+router.patch("/mentor-update", mentorMiddleware, mentorControllers.updateUser);
 router.post("/mentor-respond-request", mentorMiddleware, mentorControllers.respondToConnectionRequest);
 router.get("/mentor-pending-requests", mentorMiddleware, mentorControllers.getPendingRequests);
-// Fetch all mentors
-router.route("/mentor-all").get(mentorControllers.getAllMentors);
+router.get("/mentor-all", mentorControllers.getAllMentors);
 router.get("/mentor-connected-mentees", mentorMiddleware, mentorControllers.getConnectedMentees);
+router.post("/update-calendly", mentorMiddleware, mentorControllers.updateCalendlyLink);
+//getImageById 
+router.route("/images/:id").get(mentorControllers.getImageById)
 module.exports = router;

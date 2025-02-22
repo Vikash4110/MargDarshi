@@ -28,7 +28,7 @@ const Navbar = () => {
           <Link to="/" className="hover:text-[#127C71] transition">Home</Link>
           <Link to="/about" className="hover:text-[#127C71] transition">About</Link>
           {/* <Link to="/mentors" className="hover:text-[#127C71] transition">Mentors</Link> */}
-          <Link to="/contact" className="hover:text-[#127C71] transition flex items-center">Contact</Link>
+          <Link to="/contact" className="hover:text-[#127C71] transition flex items-center">Contact</Link> 
         </div>
 
         {/* Right Section */}
@@ -44,7 +44,6 @@ const Navbar = () => {
               </button>
             </>
           ) : (
-            // Show Logout button when user is logged in
             <Link
               to="/logout" onClick={logout}
               className="rounded-full px-4 py-2 bg-red-500 text-white font-medium transition-transform duration-200 ease-in-out hover:scale-105"

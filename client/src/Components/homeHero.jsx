@@ -1,5 +1,5 @@
 import React from 'react';
-import homeHero from '../assets/homeHero.png';
+import homeHero from '../assets/vecteezy_happy-3d-student-boy-with-books-on-white-background-png_22484651.png';
 import underline from '../assets/curveUnderline.svg';
 import { Link } from "react-router-dom";
 const exps = [

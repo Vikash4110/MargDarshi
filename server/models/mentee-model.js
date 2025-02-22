@@ -9,7 +9,7 @@ const menteeSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phoneNumber: { type: String, required: false },
-    profilePicture: { type: String, required: false },
+    profilePicture: { type: String },
     currentEducationLevel: { type: String, required: false },
     universityName: { type: String, required: false },
     fieldOfStudy: { type: String, required: false },

@@ -1,59 +1,223 @@
 const Mentor = require("../models/mentor-model");
+const mongoose = require("mongoose");
+const { GridFSBucket } = require("mongodb");
+const multer = require("multer");
+const mongoURI = process.env.MONGODB_URI;
+
 const Mentee = require("../models/mentee-model");
-const bcrypt = require("bcryptjs");
 const ConnectionRequest = require("../models/connection-request-model");
 
+
+const conn = mongoose.createConnection(mongoURI);
+
+let gridfsBucket;
+conn.once("open", () => {
+  gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
+  console.log("GridFS Bucket Ready in mentor-controller");
+});
+
+// Multer configuration (single file)
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+}).single("profilePicture"); // Accepts only one file
+
 const register = async (req, res) => {
-    try {
-        const {
-            fullName,
-            email,
-            password,
-            phoneNumber,
-            jobTitle,
-            industry,
-            yearsOfExperience,
-            company,
-            linkedInUrl,
-            skills,
-            mentorshipTopics,
-            bio
-        } = req.body;
+  try {
+    const {
+      fullName,
+      email,
+      password,
+      phoneNumber,
+      jobTitle,
+      industry,
+      yearsOfExperience,
+      company,
+      linkedInUrl,
+      skills,
+      mentorshipTopics,
+      bio,
+    } = req.body;
+    console.log("Raw req.body:", req.body); // Debugging log
 
-        // Check if user already exists
-        const userExist = await Mentor.findOne({ email });
-        if (userExist) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
+    let profilePicture = "";
 
-        // Create a new mentor
-        const newUser = new Mentor({
-            fullName,
-            email,
-            password,
-            phoneNumber,
-            jobTitle,
-            industry,
-            yearsOfExperience,
-            company,
-            linkedInUrl,
-            skills,
-            mentorshipTopics,
-            bio
+    // Process profilePicture (only one image allowed)
+    if (req.file) {
+      const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
+        contentType: req.file.mimetype,
+      });
+
+      uploadStream.end(req.file.buffer);
+      await new Promise((resolve, reject) => {
+        uploadStream.on("finish", () => {
+          profilePicture = uploadStream.id; // Store only one image ID
+          resolve();
         });
-
-        await newUser.save();
-
-        res.status(201).json({
-            message: "Registration Successful",
-            token: await newUser.generateToken(),
-            userId: newUser._id.toString(),
-        });
-    } catch (err) {
-        console.error("Registration error:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+        uploadStream.on("error", reject);
+      });
     }
+
+    // Check if user already exists
+    const userExist = await Mentor.findOne({ email });
+    if (userExist) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Create a new mentor
+    const newUser = new Mentor({
+      fullName,
+      email,
+      password,
+      phoneNumber,
+      jobTitle,
+      industry,
+      yearsOfExperience,
+      company,
+      linkedInUrl,
+      skills,
+      mentorshipTopics,
+      bio,
+      profilePicture,
+    });
+
+    await newUser.save();
+
+    res.status(201).json({
+      message: "Registration Successful",
+      token: await newUser.generateToken(),
+      userId: newUser._id.toString(),
+    });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
+
+
+// const Mentor = require("../models/mentor-model");
+// const Mentee = require("../models/mentee-model");
+// const ConnectionRequest = require("../models/connection-request-model");
+
+
+// const register = async (req, res) => {
+//   try {
+//     const {
+//       fullName,
+//       email,
+//       password,
+//       phoneNumber,
+//       jobTitle,
+//       industry,
+//       yearsOfExperience,
+//       company,
+//       linkedInUrl,
+//       skills,
+//       mentorshipTopics,
+//       bio
+//     } = req.body;
+
+//     if (!req.file) {
+//       return res.status(400).json({ message: "Profile picture is required" });
+//     }
+
+//     const userExist = await Mentor.findOne({ email });
+//     if (userExist) {
+//       return res.status(400).json({ message: "Email already exists" });
+//     }
+
+//     // Upload file to GridFS
+//     const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
+//       metadata: {
+//         contentType: req.file.mimetype,
+//       },
+//     });
+
+//     uploadStream.end(req.file.buffer);
+
+//     uploadStream.on('finish', async () => {
+//       const newUser = new Mentor({
+//         fullName,
+//         email,
+//         password,
+//         phoneNumber,
+//         jobTitle,
+//         industry,
+//         profilePicture: uploadStream.id, // Save the file ID
+//         yearsOfExperience,
+//         company,
+//         linkedInUrl,
+//         skills,
+//         mentorshipTopics,
+//         bio
+//       });
+
+//       await newUser.save();
+
+//       res.status(201).json({
+//         message: "Registration Successful",
+//         token: await newUser.generateToken(),
+//         userId: newUser._id.toString(),
+//       });
+//     });
+
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+// const register = async (req, res) => {
+//   try {
+//       const {
+//           fullName,
+//           email,
+//           password,
+//           phoneNumber,
+//           jobTitle,
+//           industry,
+//           yearsOfExperience,
+//           company,
+//           linkedInUrl,
+//           skills,
+//           mentorshipTopics,
+//           bio
+//       } = req.body;
+
+//       // Check if user already exists
+//       const userExist = await Mentor.findOne({ email });
+//       if (userExist) {
+//           return res.status(400).json({ message: "Email already exists" });
+//       }
+
+//       // Create a new mentor
+//       const newUser = new Mentor({
+//           fullName,
+//           email,
+//           password,
+//           phoneNumber,
+//           jobTitle,
+//           industry,
+//           yearsOfExperience,
+//           company,
+//           linkedInUrl,
+//           skills,
+//           mentorshipTopics,
+//           bio
+//       });
+
+//       await newUser.save();
+
+//       res.status(201).json({
+//           message: "Registration Successful",
+//           token: await newUser.generateToken(),
+//           userId: newUser._id.toString(),
+//       });
+//   } catch (err) {
+//       console.error("Registration error:", err);
+//       res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
 
 // Mentor login
 const login = async (req, res) => {
@@ -194,21 +358,46 @@ const getAllMentors = async (req, res) => {
     }
 };
 
+// const getPendingRequests = async (req, res) => {
+//     try {
+//         const mentorId = req.user._id;
+
+//         // Fetch all pending requests for the mentor
+//         const pendingRequests = await ConnectionRequest.find({
+//             mentorId,
+//             status: "pending",
+//         }).populate("menteeId", "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy");
+
+//         res.status(200).json({ pendingRequests });
+//     } catch (err) {
+//         console.error("Error fetching pending requests:", err);
+//         res.status(500).json({ message: "Internal Server Error" });
+//     }
+// };
+
 const getPendingRequests = async (req, res) => {
-    try {
-        const mentorId = req.user._id;
+  try {
+    const mentorId = req.user._id;
 
-        // Fetch all pending requests for the mentor
-        const pendingRequests = await ConnectionRequest.find({
-            mentorId,
-            status: "pending",
-        }).populate("menteeId", "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy");
+    // Fetch all pending requests for the mentor
+    const pendingRequests = await ConnectionRequest.find({
+      mentorId,
+      status: "pending",
+    }).populate({
+      path: "menteeId",
+      select: "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy",
+    });
 
-        res.status(200).json({ pendingRequests });
-    } catch (err) {
-        console.error("Error fetching pending requests:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
+    // Filter out requests with invalid or missing menteeId
+    const validRequests = pendingRequests.filter(
+      (request) => request.menteeId !== null && request.menteeId !== undefined
+    );
+
+    res.status(200).json({ pendingRequests: validRequests });
+  } catch (err) {
+    console.error("Error fetching pending requests:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
 const getConnectedMentees = async (req, res) => {
@@ -218,7 +407,7 @@ const getConnectedMentees = async (req, res) => {
       // Find the mentor and populate the connectedMentees field
       const mentor = await Mentor.findById(mentorId).populate(
         "connectedMentees",
-        "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy"
+        "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy profilePicture"
       );
   
       if (!mentor) {
@@ -232,7 +421,64 @@ const getConnectedMentees = async (req, res) => {
     }
   };
 
-module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees };
+
+  const updateCalendlyLink = async (req, res) => {
+    try {
+        const { calendlyLink } = req.body;
+        const mentorId = req.user._id;
+
+        // Validate input
+        if (!calendlyLink) {
+            return res.status(400).json({ message: "Calendly link is required" });
+        }
+
+        // Find mentor by ID
+        const mentor = await Mentor.findById(mentorId);
+        if (!mentor) {
+            return res.status(404).json({ message: "Mentor not found" });
+        }
+
+        // Update calendly link
+        mentor.calendlyLink = calendlyLink;
+        await mentor.save();
+
+        res.status(200).json({
+            message: "Calendly link updated successfully",
+            updatedMentor: mentor,
+        });
+    } catch (err) {
+        console.error("Error updating Calendly link:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+// Route to fetch images by their ID
+const getImageById = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      if (!id) {
+          return res.status(400).json({ message: "Image ID is required" });
+      }
+
+      const objectId = new mongoose.Types.ObjectId(id); // Correctly use mongoose.Types.ObjectId
+      const file = await conn.db.collection("uploads.files").findOne({ _id: objectId });
+      if (!file) {
+          return res.status(404).json({ message: "Image not found" });
+      }
+
+      const readStream = gridfsBucket.openDownloadStream(objectId);
+      res.set("Content-Type", file.contentType);
+      readStream.pipe(res);
+  } catch (error) {
+      res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+
+module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById };
 
 
  

@@ -16,9 +16,11 @@ const menteeMiddleware = async (req, res, next) => {
     if (!userData) {
       return res.status(401).json({ message: "Unauthorized. User not found." });
     }
-
+  // Convert Mongoose document to plain object
+  const tempUser = userData.toObject();
+  tempUser.profilePicture = `http://localhost:8000/api/auth/images/${tempUser.profilePicture}`;
     req.token = token;
-    req.user = userData;
+    req.user = tempUser;
     next();
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized. Invalid token." });

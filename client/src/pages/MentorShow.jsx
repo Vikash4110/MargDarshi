@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../store/auth";
-import { Link } from 'react-router-dom'
-import MentorConnection from '../pages/MentorConnection'
-
+import MentorConnection from "../pages/MentorConnection";
+import UpdateCalendly from "../Components/UpdateCalendly";
+import { Link } from "react-router-dom";
 
 const MentorShow = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -33,11 +33,12 @@ const MentorShow = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      setPendingRequests(data.pendingRequests);
+      setPendingRequests(data.pendingRequests || []); // Ensure it's an array
     } catch (err) {
       console.error("Fetch Error:", err);
       setError(err.message);
@@ -59,17 +60,17 @@ const MentorShow = () => {
           body: JSON.stringify({ requestId, status }),
         }
       );
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Backend Error:", errorData);
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
-  
+
       const data = await response.json();
       alert(data.message);
-  
-      fetchPendingRequests();
+
+      fetchPendingRequests(); // Refresh the list after responding
     } catch (err) {
       console.error("Error responding to request:", err);
       alert("Failed to respond to request");
@@ -100,77 +101,80 @@ const MentorShow = () => {
 
   return (
     <>
-    <div className="p-6">
-      <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text mb-6">
-        Mentor Dashboard
-      </h1>
+      <UpdateCalendly />
+      <div className="p-6">
+        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text mb-6">
+          Mentor Dashboard
+        </h1>
+        <Link
+          to="/mentor-user"
+          className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 transition-all"
+        >
+          Mentor User
+        </Link>
 
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        {pendingRequests.length > 0 ? (
-          pendingRequests.map((request) => (
-            <motion.div
-              key={request._id}
-              className="bg-white p-6 rounded-lg shadow-lg border-2 border-transparent hover:border-blue-400 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2"
-              whileHover={{ scale: 1.03 }}
-            >
-              <h2 className="text-xl font-bold text-center bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
-                {request.menteeId.fullName}
-              </h2>
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          {pendingRequests.length > 0 ? (
+            pendingRequests.map((request) => (
+              <motion.div
+                key={request._id}
+                className="bg-white p-6 rounded-lg shadow-lg border-2 border-transparent hover:border-blue-400 transition-all duration-300 hover:shadow-xl transform hover:-translate-y-2"
+                whileHover={{ scale: 1.03 }}
+              >
+                <h2 className="text-xl font-bold text-center bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
+                  {request.menteeId?.fullName || "Unknown Mentee"}
+                </h2>
 
-              <div className="text-gray-600 mt-2 text-center">
-                <p>
-                  <span className="font-semibold">Email:</span>{" "}
-                  {request.menteeId.email}
-                </p>
-                <p>
-                  <span className="font-semibold">Phone:</span>{" "}
-                  {request.menteeId.phoneNumber}
-                </p>
-                <p>
-                  <span className="font-semibold">Education:</span>{" "}
-                  {request.menteeId.currentEducationLevel}
-                </p>
-                <p>
-                  <span className="font-semibold">University:</span>{" "}
-                  {request.menteeId.universityName}
-                </p>
-                <p>
-                  <span className="font-semibold">Field of Study:</span>{" "}
-                  {request.menteeId.fieldOfStudy}
-                </p>
-              </div>
+                <div className="text-gray-600 mt-2 text-center">
+                  <p>
+                    <span className="font-semibold">Email:</span>{" "}
+                    {request.menteeId?.email || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Phone:</span>{" "}
+                    {request.menteeId?.phoneNumber || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Education:</span>{" "}
+                    {request.menteeId?.currentEducationLevel || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">University:</span>{" "}
+                    {request.menteeId?.universityName || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-semibold">Field of Study:</span>{" "}
+                    {request.menteeId?.fieldOfStudy || "N/A"}
+                  </p>
+                </div>
 
-              <div className="mt-4 flex justify-center space-x-4">
-                <button
-                  onClick={() =>
-                    handleRespondToRequest(request._id, "accepted")
-                  }
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() =>
-                    handleRespondToRequest(request._id, "rejected")
-                  }
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-                >
-                  Reject
-                </button>
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <p className="text-gray-500 text-center">No pending requests.</p>
-        )}
-      </motion.div>
-    </div>
-    <MentorConnection/>
+                <div className="mt-4 flex justify-center space-x-4">
+                  <button
+                    onClick={() => handleRespondToRequest(request._id, "accepted")}
+                    className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => handleRespondToRequest(request._id, "rejected")}
+                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-center">No pending requests.</p>
+          )}
+        </motion.div>
+      </div>
+      <MentorConnection />
     </>
   );
 };

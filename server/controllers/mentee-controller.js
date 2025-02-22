@@ -1,6 +1,24 @@
 const Mentee = require("../models/mentee-model");
 const { findMatchingMentors } = require("../utils/matchingAlgorithm");
 const ConnectionRequest = require("../models/connection-request-model");
+const mongoose = require("mongoose");
+const { GridFSBucket } = require("mongodb");
+const multer = require("multer");
+const mongoURI = process.env.MONGODB_URI;
+
+
+const conn = mongoose.createConnection(mongoURI);
+
+let gridfsBucket;
+conn.once("open", () => {
+  gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
+  console.log("GridFS Bucket Ready in mentee-controller");
+});
+
+// Multer configuration (single file)
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+}).single("profilePicture"); // Accepts only one file
 
 const register = async (req, res) => {
     try {
@@ -23,6 +41,24 @@ const register = async (req, res) => {
             linkedInProfileUrl,
         } = req.body;
 
+        let profilePicture = "";
+
+        // Process profilePicture (only one image allowed)
+        if (req.file) {
+            const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
+                contentType: req.file.mimetype,
+            });
+
+            uploadStream.end(req.file.buffer);
+            await new Promise((resolve, reject) => {
+                uploadStream.on("finish", () => {
+                    profilePicture = uploadStream.id; // Store only one image ID
+                    resolve();
+                });
+                uploadStream.on("error", reject);
+            });
+        }
+
         // Check if user already exists
         const userExist = await Mentee.findOne({ email });
         if (userExist) {
@@ -42,6 +78,7 @@ const register = async (req, res) => {
             careerInterests,
             desiredIndustry,
             skillsToDevelop,
+            profilePicture,
             typeOfMentorshipSought,
             preferredDaysAndTimes,
             preferredMentorshipMode,
@@ -203,12 +240,13 @@ const sendConnectionRequest = async (req, res) => {
     }
 };
 
+
 const getConnectedMentors = async (req, res) => {
     try {
       const menteeId = req.user._id;
       const mentee = await Mentee.findById(menteeId).populate(
         "connectedMentors",
-        "fullName email jobTitle industry yearsOfExperience"
+        "fullName email jobTitle industry yearsOfExperience calendlyLink profilePicture" // Include calendlyLink
       );
   
       if (!mentee) {
@@ -221,4 +259,71 @@ const getConnectedMentors = async (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     }
   };
-module.exports = { register, login, mentee, updateUser, getMatchingMentors, sendConnectionRequest, getConnectedMentors };
+
+
+  const getSentRequests = async (req, res) => {
+    try {
+        const menteeId = req.user._id;
+
+        // Fetch all connection requests sent by the mentee
+        const sentRequests = await ConnectionRequest.find({ menteeId }).populate(
+            "mentorId",
+            "fullName email jobTitle industry yearsOfExperience calendlyLink profilePicture"
+        );
+
+        res.status(200).json({ sentRequests });
+    } catch (err) {
+        console.error("Error fetching sent requests:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+const withdrawRequest = async (req, res) => {
+    try {
+        const { requestId } = req.body;
+        const menteeId = req.user._id;
+
+        // Find and delete the connection request
+        const deletedRequest = await ConnectionRequest.findOneAndDelete({
+            _id: requestId,
+            menteeId,
+        });
+
+        if (!deletedRequest) {
+            return res.status(404).json({ message: "Request not found" });
+        }
+
+        res.status(200).json({ message: "Request withdrawn successfully" });
+    } catch (err) {
+        console.error("Error withdrawing request:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+
+// Route to fetch images by their ID
+const getImageById = async (req, res) => {
+    try {
+        const { id } = req.params;
+  
+        if (!id) {
+            return res.status(400).json({ message: "Image ID is required" });
+        }
+  
+        const objectId = new mongoose.Types.ObjectId(id); // Correctly use mongoose.Types.ObjectId
+        const file = await conn.db.collection("uploads.files").findOne({ _id: objectId });
+        if (!file) {
+            return res.status(404).json({ message: "Image not found" });
+        }
+  
+        const readStream = gridfsBucket.openDownloadStream(objectId);
+        res.set("Content-Type", file.contentType);
+        readStream.pipe(res);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+  };
+
+
+module.exports = { register, login, mentee, updateUser, getMatchingMentors, sendConnectionRequest, getConnectedMentors, getSentRequests ,withdrawRequest , getImageById, imageUpload };
+
