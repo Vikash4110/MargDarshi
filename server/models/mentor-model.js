@@ -63,5 +63,6 @@ mentorSchema.methods.generateToken = function () {
       expiresIn: "1h",
     });
   };
-
-module.exports = mongoose.model("Mentor", mentorSchema);
+// Export model
+const Mentor = mongoose.model("Mentor", mentorSchema);
+module.exports = Mentor;

@@ -26,8 +26,6 @@
 // };
 
 // module.exports = mentorMiddleware;
-
-
 const jwt = require("jsonwebtoken");
 const Mentor = require("../models/mentor-model");
 
@@ -40,8 +38,12 @@ const mentorMiddleware = async (req, res, next) => {
 
   const jwtToken = token.replace("Bearer ", "").trim();
   try {
+    console.log("Token:", jwtToken); // Log the token
     const isVerified = jwt.verify(jwtToken, process.env.JWT_KEY);
+    console.log("Decoded Token:", isVerified); // Log the decoded token
+
     const userData = await Mentor.findById(isVerified.userId).select({ password: 0 });
+    console.log("User Data from DB:", userData); // Log the user data fetched from the database
 
     if (!userData) {
       return res.status(401).json({ message: "Unauthorized. User not found." });
@@ -53,11 +55,12 @@ const mentorMiddleware = async (req, res, next) => {
 
     req.token = token;
     req.user = tempUser;
-    
+
     next();
   } catch (error) {
+    console.error("Middleware Error:", error); // Log the error
     return res.status(401).json({ message: "Unauthorized. Invalid token." });
   }
 };
- 
+
 module.exports = mentorMiddleware;

@@ -16,7 +16,7 @@ router.route("/mentor-register")
 
 
 router.post("/mentor-login", validate(loginSchema), mentorControllers.login);
-router.get("/mentor-user", mentorControllers.mentor);
+router.get("/mentor-user",mentorMiddleware, mentorControllers.mentor);
 router.patch("/mentor-update", mentorMiddleware, mentorControllers.updateUser);
 router.post("/mentor-respond-request", mentorMiddleware, mentorControllers.respondToConnectionRequest);
 router.get("/mentor-pending-requests", mentorMiddleware, mentorControllers.getPendingRequests);

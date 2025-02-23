@@ -129,15 +129,28 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   };
-
   const mentorAuthentication = async () => {
     try {
       const response = await fetch(`${backendUrl}/api/auth/mentor-user`, {
         method: "GET",
         headers: { Authorization: authorizationToken },
       });
-      if (response.ok) {
-        const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const text = await response.text(); // Get the raw response text
+      console.log("Raw response text:", text); // Log the raw response
+  
+      let data;
+      try {
+        data = JSON.parse(text); // Try to parse the response as JSON
+      } catch (error) {
+        throw new Error("Invalid JSON response");
+      }
+  
+      if (data && data.userData) {
         setUser(data.userData);
       } else {
         setUser(null);

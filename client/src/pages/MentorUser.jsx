@@ -28,7 +28,16 @@ const MentorUser = () => {
 
         if (!response.ok) throw new Error("Failed to fetch mentor details");
 
-        const data = await response.json();
+        const text = await response.text(); // Get the raw response text
+        console.log("Raw response text:", text); // Log the raw response
+
+        let data;
+        try {
+          data = JSON.parse(text); // Try to parse the response as JSON
+        } catch (error) {
+          throw new Error("Invalid JSON response");
+        }
+
         setMentor(data);
       } catch (err) {
         setError(err.message);
@@ -64,6 +73,7 @@ const MentorUser = () => {
       </motion.p>
     );
   }
+
 
   // Background animation variants
   const bgVariants = {
