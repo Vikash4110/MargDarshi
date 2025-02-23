@@ -59,9 +59,9 @@ mentorSchema.methods.comparePassword = async function (candidatePassword) {
 
 // Generate JWT token
 mentorSchema.methods.generateToken = function () {
-    return jwt.sign({ userId: this._id }, process.env.JWT_KEY, {
-        expiresIn: "1h",
+    return jwt.sign({ userId: this._id, role: "mentor" }, process.env.JWT_KEY, {
+      expiresIn: "1h",
     });
-};
+  };
 
 module.exports = mongoose.model("Mentor", mentorSchema);

@@ -247,12 +247,12 @@ const login = async (req, res) => {
 
 // Fetch mentee user details
 const mentor = async (req, res) => {
-    try {
-        res.status(200).json(req.user);
-    } catch (err) {
-        console.error("Fetching user details error:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
+  try {
+    res.status(200).json(req.user);
+  } catch (err) {
+    console.error("Fetching user details error:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 };
 
 // Update mentor details (without changing password)

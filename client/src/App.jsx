@@ -21,6 +21,7 @@ import MenteeAcceptedReq from './pages/MenteeAcceptedReq';
 import VideoCall from './pages/VideoCall';
 import MenteeMain from './pages/MenteeMain';
 import LogOut from './Components/LogOut';
+import SkillAssessment from "./pages/SkillAssessment";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -52,6 +53,7 @@ const App = () => {
         <Route path="/mentee-main" element={<MenteeMain />} />
         <Route path="/mentor-connection" element={<MentorConnection />} />
         <Route path="/mentee-accepted-req" element={<MenteeAcceptedReq />} />
+        <Route path="/skill-assessment" element={<SkillAssessment />} />
         <Route path="/logout" element={<LogOut />} />
       </Routes>
     </Router>

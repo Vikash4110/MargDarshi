@@ -123,7 +123,7 @@ const MentorUser = () => {
               {mentor.fullName || "N/A"}
             </motion.h2>
             <motion.div
-              className="flex items-center font-bold mt-2 text-lg text-gray-600"
+              className="flex items-center mt-2 text-lg text-gray-600"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
@@ -131,7 +131,7 @@ const MentorUser = () => {
               <IoBriefcase className="mr-2 text-teal-600" /> {mentor.jobTitle || "Job title not available"}
             </motion.div>
             <motion.div
-              className="flex items-center font-bold  mt-1 text-lg text-gray-500"
+              className="flex items-center mt-1 text-lg text-gray-500"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
@@ -139,7 +139,7 @@ const MentorUser = () => {
               <IoCalendar className="mr-2 text-teal-600" /> {mentor.company || "Company not available"}
             </motion.div>
             <motion.div
-              className="flex items-center font-bold mt-1 text-lg text-gray-500"
+              className="flex items-center mt-1 text-sm text-gray-500"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.5 }}

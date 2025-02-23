@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-toastify";
-import { IoSearch, IoFilter, IoChevronDown, IoChevronUp, IoBriefcase, IoCode, IoCalendar, IoPerson } from "react-icons/io5";
+import {
+  IoSearch,
+  IoFilter,
+  IoChevronDown,
+  IoChevronUp,
+  IoBriefcase,
+  IoCode,
+  IoCalendar,
+  IoPerson,
+} from "react-icons/io5";
 import SentRequests from "../Components/SentRequests";
 import Img from "../assets/vecteezy_3d-icon-note-search_16326951.png";
 
@@ -10,17 +19,14 @@ const MentorList = () => {
 
   const [mentors, setMentors] = useState([]);
   const [filteredMentors, setFilteredMentors] = useState([]);
-  const [sentRequests, setSentRequests] = useState(new Set());
+  const [sentRequests, setSentRequests] = useState(new Set()); // Stores mentor IDs with sent requests
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [showSentRequests, setShowSentRequests] = useState(false);
 
-  useEffect(() => {
-    fetchMentors();
-  }, []);
-
+  // Fetch all mentors
   const fetchMentors = async () => {
     setLoading(true);
     setError(null);
@@ -32,14 +38,35 @@ const MentorList = () => {
       setMentors(mentorList);
       setFilteredMentors(mentorList);
     } catch (err) {
-      console.error("Fetch Error:", err);
+      console.error("Fetch Mentors Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch sent connection requests
+  const fetchSentRequests = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/mentee-sent-requests`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const data = await response.json();
+      const sentRequestIds = new Set(data.sentRequests.map((req) => req.mentorId._id.toString()));
+      setSentRequests(sentRequestIds);
+    } catch (err) {
+      console.error("Fetch Sent Requests Error:", err);
+      toast.error("Failed to load sent requests.");
+    }
+  };
+
+  // Send connection request
   const handleSendRequest = async (mentorId) => {
+    if (sentRequests.has(mentorId)) return; // Prevent sending if already sent
+
     try {
       const response = await fetch(`${backendUrl}/api/auth/mentee-send-request`, {
         method: "POST",
@@ -50,7 +77,7 @@ const MentorList = () => {
         body: JSON.stringify({ mentorId }),
       });
       if (!response.ok) throw new Error(`API Error: ${response.status} ${response.statusText}`);
-      setSentRequests((prev) => new Set([...prev, mentorId]));
+      setSentRequests((prev) => new Set([...prev, mentorId])); // Add mentorId to sentRequests
       toast.success("Request Sent Successfully!");
     } catch (err) {
       console.error("Error sending request:", err);
@@ -58,6 +85,13 @@ const MentorList = () => {
     }
   };
 
+  // Fetch mentors and sent requests on mount
+  useEffect(() => {
+    fetchMentors();
+    fetchSentRequests();
+  }, []);
+
+  // Handle search functionality
   const handleSearch = () => {
     let filtered = mentors;
     if (searchQuery) {
@@ -71,6 +105,7 @@ const MentorList = () => {
     setFilteredMentors(filtered);
   };
 
+  // Handle sort functionality
   const handleSort = (sortType) => {
     let sortedMentors = [...filteredMentors];
     switch (sortType) {
@@ -94,7 +129,6 @@ const MentorList = () => {
     handleSort(sortBy);
   }, [sortBy]);
 
-  // Background animation variants
   const bgVariants = {
     animate: {
       backgroundPosition: ["0% 0%", "100% 100%"],
@@ -114,15 +148,25 @@ const MentorList = () => {
       animate="animate"
       style={{ backgroundSize: "200% 200%" }}
     >
-      {/* Search and Sorting Section */}
+      {loading && (
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+        </div>
+      )}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <p>Error: {error}</p>
+        </div>
+      )}
+
       {!showSentRequests && (
         <motion.div
-          className="flex items-center justify-center max-w-7xl mx-auto mb-12"
+          className="flex flex-col md:flex-row items-center justify-center max-w-7xl mx-auto mb-12"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <div className="bg-gradient-to-r from-[#0f6f5c] to-teal-600 p-8 rounded-2xl shadow-xl text-white w-1/2">
+          <div className="bg-gradient-to-r from-[#0f6f5c] to-teal-600 p-8 rounded-2xl shadow-xl text-white w-full md:w-1/2 mb-6 md:mb-0">
             <motion.h2
               className="text-3xl font-extrabold mb-6 tracking-tight"
               initial={{ opacity: 0 }}
@@ -161,17 +205,16 @@ const MentorList = () => {
             </div>
           </div>
           <motion.div
-            className="flex-shrink-0 w-1/2 flex justify-center"
+            className="flex-shrink-0 w-full md:w-1/2 flex justify-center"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           >
-            <img src={Img} alt="Search Illustration" className="h-80 w-auto rounded-2xl " />
+            <img src={Img} alt="Search Illustration" className="h-80 w-auto rounded-2xl" />
           </motion.div>
         </motion.div>
       )}
 
-      {/* Toggle Sent Requests */}
       {!showSentRequests && (
         <motion.button
           onClick={() => setShowSentRequests(!showSentRequests)}
@@ -183,10 +226,8 @@ const MentorList = () => {
         </motion.button>
       )}
 
-      {/* Sent Requests Component */}
       {showSentRequests && <SentRequests onBack={() => setShowSentRequests(false)} />}
 
-      {/* Mentor Cards */}
       {!showSentRequests && (
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto"
@@ -195,108 +236,87 @@ const MentorList = () => {
           transition={{ duration: 0.6 }}
         >
           <AnimatePresence>
-            {filteredMentors.map((mentor) => (
-              <motion.div
-                key={mentor._id}
-                className="relative bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)" }}
-              >
-                {/* Decorative Top Gradient */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0f6f5c] to-teal-400" />
-
-                {/* Profile Section */}
-                <div className="flex items-center space-x-4">
-                  {mentor.profilePicture ? (
-                    <motion.img
-                      src={`${backendUrl}/api/auth/images/${mentor.profilePicture}`}
-                      alt={mentor.fullName}
-                      className="w-16 h-16 object-cover rounded-full border-2 border-teal-500 shadow-sm"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gray-100 rounded-full border-2 border-teal-500 flex items-center justify-center">
-                      <IoPerson className="text-gray-400" size={24} />
-                    </div>
-                  )}
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800 tracking-tight">{mentor.fullName}</h2>
-                    <p className="text-base font-bold text-gray-500 flex items-center">
-                      <IoBriefcase className="mr-1 text-teal-600" /> {mentor.jobTitle}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Details Section */}
-                <div className="mt-6 space-y-4">
-                  <p className="text-gray-700 flex items-center text-base">
-                    <IoBriefcase className="mr-2 text-teal-600" />{" "}
-                    <span className="font-bold text-gray-800">Industry:</span> <span className="ml-1">{mentor.industry}</span>
-                  </p>
-                  <p className="text-gray-700 flex items-center text-base">
-                    <IoCalendar className="mr-2 text-teal-600" />{" "}
-                    <span className="font-bold text-gray-800">Experience:</span> <span className="ml-1">{mentor.yearsOfExperience} years</span>
-                  </p>
-                  <div>
-                    <p className="text-gray-700 flex items-center text-base">
-                      <IoCode className="mr-2 text-teal-600" />{" "}
-                      <span className="font-bold text-gray-800">Skills:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {mentor.skills?.map((skill, index) => (
-                        <motion.span
-                          key={index}
-                          className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-full shadow-sm"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.1, duration: 0.3 }}
-                        >
-                          {skill}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-gray-700 flex items-center text-base">
-                      <IoCode className="mr-2 text-teal-600" />{" "}
-                      <span className="font-bold text-gray-800">Mentorships:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {mentor.mentorshipTopics?.map((topic, index) => (
-                        <motion.span
-                          key={index}
-                          className="px-3 py-1 text-sm bg-teal-200 text-teal-800 rounded-full shadow-sm"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: index * 0.1, duration: 0.3 }}
-                        >
-                          {topic}
-                        </motion.span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <motion.button
-                  onClick={() => !sentRequests.has(mentor._id) && handleSendRequest(mentor._id)}
-                  className={`mt-6 w-full py-3 rounded-lg font-semibold text-white shadow-md transition duration-300 ${
-                    sentRequests.has(mentor._id)
-                      ? "bg-gray-300 cursor-not-allowed"
-                      : "bg-gradient-to-r from-[#0f6f5c] to-teal-500 hover:from-teal-600 hover:to-teal-700"
-                  }`}
-                  whileHover={{ scale: sentRequests.has(mentor._id) ? 1 : 1.05 }}
-                  whileTap={{ scale: sentRequests.has(mentor._id) ? 1 : 0.95 }}
-                  disabled={sentRequests.has(mentor._id)}
+            {filteredMentors.map((mentor) => {
+              const isRequestSent = sentRequests.has(mentor._id);
+              return (
+                <motion.div
+                  key={mentor._id}
+                  className="relative bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)" }}
                 >
-                  {sentRequests.has(mentor._id) ? "Request Sent" : "Connect with Mentor"}
-                </motion.button>
-              </motion.div>
-            ))}
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0f6f5c] to-teal-400" />
+                  <div className="flex items-center space-x-4">
+                    {mentor.profilePicture ? (
+                      <motion.img
+                        src={`${backendUrl}/api/auth/images/${mentor.profilePicture}`}
+                        alt={mentor.fullName}
+                        className="w-16 h-16 object-cover rounded-full border-2 border-teal-500 shadow-sm"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-100 rounded-full border-2 border-teal-500 flex items-center justify-center">
+                        <IoPerson className="text-gray-400" size={24} />
+                      </div>
+                    )}
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-800 tracking-tight">{mentor.fullName}</h2>
+                      <p className="text-base font-bold text-gray-500 flex items-center">
+                        <IoBriefcase className="mr-1 text-teal-600" /> {mentor.jobTitle}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6 space-y-4">
+                    <p className="text-gray-700 flex items-center text-base">
+                      <IoBriefcase className="mr-2 text-teal-600" />{" "}
+                      <span className="font-bold text-gray-800">Industry:</span>{" "}
+                      <span className="ml-1">{mentor.industry}</span>
+                    </p>
+                    <p className="text-gray-700 flex items-center text-base">
+                      <IoCalendar className="mr-2 text-teal-600" />{" "}
+                      <span className="font-bold text-gray-800">Experience:</span>{" "}
+                      <span className="ml-1">{mentor.yearsOfExperience} years</span>
+                    </p>
+                    <div>
+                      <p className="text-gray-700 flex items-center text-base">
+                        <IoCode className="mr-2 text-teal-600" />{" "}
+                        <span className="font-bold text-gray-800">Skills:</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {mentor.skills?.map((skill, index) => (
+                          <motion.span
+                            key={index}
+                            className="px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded-full shadow-sm"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: index * 0.1, duration: 0.3 }}
+                          >
+                            {skill}
+                          </motion.span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <motion.button
+                    onClick={() => handleSendRequest(mentor._id)}
+                    className={`mt-6 w-full py-3 rounded-lg font-semibold text-white shadow-md transition duration-300 ${
+                      isRequestSent
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-gradient-to-r from-[#0f6f5c] to-teal-500 hover:from-teal-600 hover:to-teal-700"
+                    }`}
+                    whileHover={{ scale: isRequestSent ? 1 : 1.05 }}
+                    whileTap={{ scale: isRequestSent ? 1 : 0.95 }}
+                    disabled={isRequestSent}
+                  >
+                    {isRequestSent ? "Request Already Sent" : "Connect with Mentor"}
+                  </motion.button>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </motion.div>
       )}

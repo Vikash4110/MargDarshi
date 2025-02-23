@@ -18,6 +18,9 @@ const Home = () => {
 
   return (
     <>
+    <div className=" bg-gradient-to-br from-gray-50 to-teal-50 ">
+
+   
       {/* Hero Section with AOS */}
       <div data-aos="fade-up">
         <Hero />
@@ -83,7 +86,9 @@ const Home = () => {
 
       {/* Chatbot Component */}
       {isChatbotOpen && <Chatbot onClose={() => setIsChatbotOpen(false)} />}
+      </div>
     </>
+    
   );
 };
 

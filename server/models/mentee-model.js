@@ -45,9 +45,8 @@ menteeSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Generate JWT token
-menteeSchema.methods.generateToken = async function () {
-  return jwt.sign({ userId: this._id }, process.env.JWT_KEY, {
+menteeSchema.methods.generateToken = function () {
+  return jwt.sign({ userId: this._id, role: "mentee" }, process.env.JWT_KEY, {
     expiresIn: "1h",
   });
 };
