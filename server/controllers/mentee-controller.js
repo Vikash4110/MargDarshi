@@ -579,23 +579,46 @@ const sendConnectionRequest = async (req, res) => {
 };
 
 const getConnectedMentors = async (req, res) => {
-  try {
-    const menteeId = req.user._id;
-    const mentee = await Mentee.findById(menteeId).populate(
-      "connectedMentors",
-      "fullName email jobTitle industry yearsOfExperience calendlyLink profilePicture"
-    );
-
-    if (!mentee) {
-      return res.status(404).json({ message: "Mentee not found" });
+    try {
+      const menteeId = req.user._id;
+      const mentee = await Mentee.findById(menteeId).populate(
+        "connectedMentors",
+        "fullName email jobTitle industry yearsOfExperience calendlyLink profilePicture"
+      );
+  
+      if (!mentee) {
+        return res.status(404).json({ message: "Mentee not found" });
+      }
+  
+      // Ensure uniqueness by converting to Set and back to array
+      const uniqueConnectedMentors = Array.from(new Set(mentee.connectedMentors.map(m => m._id.toString())))
+        .map(id => mentee.connectedMentors.find(m => m._id.toString() === id));
+  
+      res.status(200).json({ connectedMentors: uniqueConnectedMentors });
+    } catch (err) {
+      console.error("Error fetching connected mentors:", err);
+      res.status(500).json({ message: "Internal Server Error" });
     }
+  };
 
-    res.status(200).json({ connectedMentors: mentee.connectedMentors });
-  } catch (err) {
-    console.error("Error fetching connected mentors:", err);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
-};
+// const getConnectedMentors = async (req, res) => {
+//   try {
+//     const menteeId = req.user._id;
+//     const mentee = await Mentee.findById(menteeId).populate(
+//       "connectedMentors",
+//       "fullName email jobTitle industry yearsOfExperience calendlyLink profilePicture"
+//     );
+
+//     if (!mentee) {
+//       return res.status(404).json({ message: "Mentee not found" });
+//     }
+
+//     res.status(200).json({ connectedMentors: mentee.connectedMentors });
+//   } catch (err) {
+//     console.error("Error fetching connected mentors:", err);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
 
 const getSentRequests = async (req, res) => {
   try {

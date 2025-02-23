@@ -33,6 +33,12 @@ const mentorSchema = new mongoose.Schema(
             github: { type: String },
             other: { type: String },
         },
+        blogs: [
+            {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: "Blog",
+            },
+          ],
         calendlyLink: { type: String , default: "" },
         connectedMentees: [
             {

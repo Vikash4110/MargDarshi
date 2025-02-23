@@ -1,8 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../store/auth";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FaLink, FaPaperPlane, FaSpinner } from "react-icons/fa";
 
 const UpdateCalendly = () => {
   const [calendlyLink, setCalendlyLink] = useState("");
@@ -34,7 +35,7 @@ const UpdateCalendly = () => {
       }
 
       toast.success("Calendly link updated successfully!");
-      setCalendlyLink(""); // Clear input after success
+      setCalendlyLink("");
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -44,48 +45,77 @@ const UpdateCalendly = () => {
 
   return (
     <motion.div
-      className="max-w-lg mx-auto p-6 bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg rounded-lg"
-      initial={{ opacity: 0, y: -20 }}
+      className="max-w-lg mx-auto p-8 bg-white rounded-2xl shadow-lg border border-gray-100 mt-12"
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6 }}
     >
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0f6f5c] to-teal-400" />
       {/* Title */}
-      <h2 className="text-3xl font-bold text-center mb-4">Update Your Calendly Link</h2>
+      <h2 className="text-3xl font-extrabold text-[#127C71] text-center mb-6 tracking-tight">
+        Update Your Calendly Link
+      </h2>
 
-      {/* Steps to Generate Calendly Link */}
-      <div className="bg-white text-gray-800 p-4 rounded-lg shadow-md mb-4">
-        <h3 className="text-lg font-semibold mb-2">How to Generate a Calendly Link?</h3>
-        <ol className="list-decimal list-inside space-y-2 text-sm">
+      {/* Instructions */}
+      <motion.div
+        className="bg-gray-50 p-4 rounded-lg shadow-inner mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+          <FaLink className="mr-2 text-teal-500" /> How to Generate a Calendly Link
+        </h3>
+        <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
           <li>
-            Go to <a href="https://calendly.com/" target="_blank" className="text-blue-500 underline">Calendly</a> and log in.
+            Visit{" "}
+            <a href="https://calendly.com/" target="_blank" rel="noopener noreferrer" className="text-teal-500 hover:underline">
+              Calendly
+            </a>{" "}
+            and log in or sign up.
           </li>
-          <li>Click on <strong>"New Event Type"</strong> and set up your availability.</li>
-          <li>Once done, click on <strong>"Copy Link"</strong> at the top.</li>
-          <li>Paste the link below and click <strong>"Update"</strong>.</li>
+          <li>Create a <strong>New Event Type</strong> and configure your availability.</li>
+          <li>Copy the link from the event page (e.g., <em>https://calendly.com/username/event</em>).</li>
+          <li>Paste it below and click <strong>Update</strong>.</li>
         </ol>
-      </div>
+      </motion.div>
 
       {/* Input Field */}
-      <input
-        type="text"
-        className="w-full p-3 text-gray-800 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300"
-        placeholder="Paste your Calendly link here"
-        value={calendlyLink}
-        onChange={(e) => setCalendlyLink(e.target.value)}
-      />
+      <motion.div
+        className="relative mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+      >
+        <input
+          type="text"
+          className="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 text-gray-800 placeholder-gray-400"
+          placeholder="Paste your Calendly link here (e.g., https://calendly.com/username/event)"
+          value={calendlyLink}
+          onChange={(e) => setCalendlyLink(e.target.value)}
+        />
+      </motion.div>
 
       {/* Update Button */}
-      <button
+      <motion.button
         onClick={handleUpdate}
-        className={`mt-4 w-full py-3 rounded-md text-lg font-semibold shadow-md transition ${
-          loading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-green-500 hover:bg-green-600"
+        className={`w-full py-3 rounded-lg font-semibold text-white shadow-md flex items-center justify-center transition duration-300 ${
+          loading ? "bg-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-[#0f6f5c] to-teal-500 hover:from-teal-600 hover:to-teal-700"
         }`}
+        whileHover={!loading && { scale: 1.05 }}
+        whileTap={!loading && { scale: 0.95 }}
         disabled={loading}
       >
-        {loading ? "Updating..." : "Update Link"}
-      </button>
+        {loading ? (
+          <>
+            <FaSpinner className="animate-spin mr-2" /> Updating...
+          </>
+        ) : (
+          <>
+            <FaPaperPlane className="mr-2" /> Update Link
+          </>
+        )}
+      </motion.button>
     </motion.div>
   );
 };

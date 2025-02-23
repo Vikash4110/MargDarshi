@@ -4,7 +4,6 @@ const messageControllers = require("../controllers/message-controller");
 const menteeMiddleware = require("../middlewares/mentee-middleware");
 const mentorMiddleware = require("../middlewares/mentor-middleware");
 
-// Middleware to handle both mentor and mentee authentication
 const authMiddleware = (req, res, next) => {
   const token = req.header("Authorization");
   if (!token) {
@@ -25,7 +24,8 @@ const authMiddleware = (req, res, next) => {
   });
 };
 
-router.post("/send-message", authMiddleware, messageControllers.sendMessage);
-router.get("/messages/:userId1/:userId2", authMiddleware, messageControllers.getMessages);
+router.post("/send-message",  messageControllers.sendMessage);
+router.get("/messages/:userId1/:userId2",  messageControllers.getMessages);
+router.delete("/delete-message/:messageId",  messageControllers.deleteMessage);
 
 module.exports = router;

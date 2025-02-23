@@ -3,6 +3,15 @@ const Message = require("../models/message-model");
 const sendMessage = async (req, res) => {
   try {
     const { senderId, receiverId, message, senderModel, receiverModel } = req.body;
+
+    if (!senderId || !receiverId || !message || !senderModel || !receiverModel) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (!["Mentor", "Mentee"].includes(senderModel) || !["Mentor", "Mentee"].includes(receiverModel)) {
+      return res.status(400).json({ message: "Invalid sender or receiver model" });
+    }
+
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -13,6 +22,7 @@ const sendMessage = async (req, res) => {
     await newMessage.save();
     res.status(201).json({ newMessage });
   } catch (error) {
+    console.error("Error sending message:", error);
     res.status(500).json({ message: "Error sending message", error });
   }
 };
@@ -39,4 +49,26 @@ const getMessages = async (req, res) => {
   }
 };
 
-module.exports = { sendMessage, getMessages };
+const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user._id;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    if (message.senderId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to delete this message" });
+    }
+
+    await Message.deleteOne({ _id: messageId });
+    res.status(200).json({ message: "Message deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting message:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { sendMessage, getMessages, deleteMessage };

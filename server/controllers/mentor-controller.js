@@ -294,60 +294,112 @@ const updateUser = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
 const respondToConnectionRequest = async (req, res) => {
-    try {
-      const { requestId, status } = req.body;
-      const mentorId = req.user._id;
-  
-      if (!requestId || !status) {
-        return res.status(400).json({ message: "Request ID and status are required" });
+  try {
+    const { requestId, status } = req.body;
+    const mentorId = req.user._id;
+
+    if (!requestId || !status) {
+      return res.status(400).json({ message: "Request ID and status are required" });
+    }
+
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const request = await ConnectionRequest.findById(requestId).populate("menteeId");
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    if (request.mentorId.toString() !== mentorId.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    request.status = status;
+    await request.save();
+
+    if (status === "accepted") {
+      const mentee = await Mentee.findById(request.menteeId);
+      if (!mentee) {
+        return res.status(404).json({ message: "Mentee not found" });
       }
-  
-      if (!["accepted", "rejected"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-  
-      // Find the request
-      const request = await ConnectionRequest.findById(requestId).populate(
-        "menteeId"
-      );
-  
-      if (!request) {
-        return res.status(404).json({ message: "Request not found" });
-      }
-  
-      if (request.mentorId.toString() !== mentorId.toString()) {
-        return res.status(403).json({ message: "Unauthorized" });
-      }
-  
-      // Update the request status
-      request.status = status;
-      await request.save();
-  
-      if (status === "accepted") {
-        // Add mentor to mentee's connectedMentors
-        const mentee = await Mentee.findById(request.menteeId);
-        if (!mentee) {
-          return res.status(404).json({ message: "Mentee not found" });
-        }
+      if (!mentee.connectedMentors.includes(mentorId)) {
         mentee.connectedMentors.push(mentorId);
         await mentee.save();
-  
-        // Add mentee to mentor's connectedMentees
-        const mentor = await Mentor.findById(mentorId);
-        if (!mentor) {
-          return res.status(404).json({ message: "Mentor not found" });
-        }
+      }
+
+      const mentor = await Mentor.findById(mentorId);
+      if (!mentor) {
+        return res.status(404).json({ message: "Mentor not found" });
+      }
+      if (!mentor.connectedMentees.includes(request.menteeId)) {
         mentor.connectedMentees.push(request.menteeId);
         await mentor.save();
       }
-  
-      res.status(200).json({ message: `Request ${status}` });
-    } catch (err) {
-      console.error("Error responding to connection request:", err);
-      res.status(500).json({ message: "Internal Server Error" });
     }
-  };
+
+    res.status(200).json({ message: `Request ${status}` });
+  } catch (err) {
+    console.error("Error responding to connection request:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+// const respondToConnectionRequest = async (req, res) => {
+//     try {
+//       const { requestId, status } = req.body;
+//       const mentorId = req.user._id;
+  
+//       if (!requestId || !status) {
+//         return res.status(400).json({ message: "Request ID and status are required" });
+//       }
+  
+//       if (!["accepted", "rejected"].includes(status)) {
+//         return res.status(400).json({ message: "Invalid status" });
+//       }
+  
+//       // Find the request
+//       const request = await ConnectionRequest.findById(requestId).populate(
+//         "menteeId"
+//       );
+  
+//       if (!request) {
+//         return res.status(404).json({ message: "Request not found" });
+//       }
+  
+//       if (request.mentorId.toString() !== mentorId.toString()) {
+//         return res.status(403).json({ message: "Unauthorized" });
+//       }
+  
+//       // Update the request status
+//       request.status = status;
+//       await request.save();
+  
+//       if (status === "accepted") {
+//         // Add mentor to mentee's connectedMentors
+//         const mentee = await Mentee.findById(request.menteeId);
+//         if (!mentee) {
+//           return res.status(404).json({ message: "Mentee not found" });
+//         }
+//         mentee.connectedMentors.push(mentorId);
+//         await mentee.save();
+  
+//         // Add mentee to mentor's connectedMentees
+//         const mentor = await Mentor.findById(mentorId);
+//         if (!mentor) {
+//           return res.status(404).json({ message: "Mentor not found" });
+//         }
+//         mentor.connectedMentees.push(request.menteeId);
+//         await mentor.save();
+//       }
+  
+//       res.status(200).json({ message: `Request ${status}` });
+//     } catch (err) {
+//       console.error("Error responding to connection request:", err);
+//       res.status(500).json({ message: "Internal Server Error" });
+//     }
+//   };
 
 const getAllMentors = async (req, res) => {
     try {
@@ -401,26 +453,47 @@ const getPendingRequests = async (req, res) => {
   }
 };
 
+// Ensure getConnectedMentees returns unique mentees
 const getConnectedMentees = async (req, res) => {
-    try {
-      const mentorId = req.user._id;
-  
-      // Find the mentor and populate the connectedMentees field
-      const mentor = await Mentor.findById(mentorId).populate(
-        "connectedMentees",
-        "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy profilePicture"
-      );
-  
-      if (!mentor) {
-        return res.status(404).json({ message: "Mentor not found" });
-      }
-  
-      res.status(200).json({ connectedMentees: mentor.connectedMentees });
-    } catch (err) {
-      console.error("Error fetching connected mentees:", err);
-      res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const mentorId = req.user._id;
+    const mentor = await Mentor.findById(mentorId).populate(
+      "connectedMentees",
+      "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy profilePicture"
+    );
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
     }
-  };
+    // Remove duplicates from connectedMentees
+    const uniqueMentees = Array.from(new Set(mentor.connectedMentees.map(m => m._id.toString())))
+      .map(id => mentor.connectedMentees.find(m => m._id.toString() === id));
+    res.status(200).json({ connectedMentees: uniqueMentees });
+  } catch (err) {
+    console.error("Error fetching connected mentees:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// const getConnectedMentees = async (req, res) => {
+//     try {
+//       const mentorId = req.user._id;
+  
+//       // Find the mentor and populate the connectedMentees field
+//       const mentor = await Mentor.findById(mentorId).populate(
+//         "connectedMentees",
+//         "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy profilePicture"
+//       );
+  
+//       if (!mentor) {
+//         return res.status(404).json({ message: "Mentor not found" });
+//       }
+  
+//       res.status(200).json({ connectedMentees: mentor.connectedMentees });
+//     } catch (err) {
+//       console.error("Error fetching connected mentees:", err);
+//       res.status(500).json({ message: "Internal Server Error" });
+//     }
+//   };
 
 
   const updateCalendlyLink = async (req, res) => {
@@ -567,8 +640,40 @@ const updateJobStatus = async (req, res) => {
   }
 };
 
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId, status } = req.body;
+    const mentorId = req.user._id;
 
-module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus,};
+    if (!applicationId || !status) {
+      return res.status(400).json({ message: "Application ID and status are required" });
+    }
+
+    if (!["Pending", "Reviewed", "Accepted", "Rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const application = await JobApplication.findById(applicationId).populate("jobId");
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Check if the mentor owns the job
+    if (application.jobId.mentorId.toString() !== mentorId.toString()) {
+      return res.status(403).json({ message: "Unauthorized to update this application" });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.status(200).json({ message: `Application status updated to ${status}`, application });
+  } catch (err) {
+    console.error("Error updating application status:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus};
 
 
  

@@ -24,7 +24,10 @@ import LogOut from './Components/LogOut';
 import SkillAssessment from "./pages/SkillAssessment";
 import PostJob from "./pages/PostJob";
 import JobMenteeDashboard from "./pages/JobMenteeDashboard";
-import MentorJobApplicants from './pages/MentorJobaApplicants'
+import MentorJobApplicants from './pages/MentorJobApplicants';
+import MenteeApplications from './pages/MenteeApplications';
+import MenteeBlogs from './pages/MenteeBlogs';
+import MentorBlogs from './pages/MentorBlogs';
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -60,6 +63,9 @@ const App = () => {
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/job-mentee-dashboard" element={<JobMenteeDashboard />} />
         <Route path="/mentor-job-applicants/:jobId" element={<MentorJobApplicants />} />
+        <Route path="/mentee-applications" element={<MenteeApplications />} />
+        <Route path="/mentor-blogs" element={<MentorBlogs />} />
+        <Route path="/mentee-blogs" element={<MenteeBlogs />} />
         <Route path="/logout" element={<LogOut />} />
       </Routes>
     </Router>
