@@ -23,6 +23,11 @@ router.get("/mentor-pending-requests", mentorMiddleware, mentorControllers.getPe
 router.get("/mentor-all", mentorControllers.getAllMentors);
 router.get("/mentor-connected-mentees", mentorMiddleware, mentorControllers.getConnectedMentees);
 router.post("/update-calendly", mentorMiddleware, mentorControllers.updateCalendlyLink);
-//getImageById 
 router.route("/images/:id").get(mentorControllers.getImageById)
 module.exports = router;
+
+// New Job Posting Routes
+router.post("/mentor-post-job", mentorMiddleware, mentorControllers.postJob);
+router.get("/mentor-posted-jobs", mentorMiddleware, mentorControllers.getPostedJobs);
+router.get("/mentor-job-applicants/:jobId", mentorMiddleware, mentorControllers.getJobApplicants);
+router.patch("/mentor-update-job-status", mentorMiddleware, mentorControllers.updateJobStatus);

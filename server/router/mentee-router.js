@@ -53,5 +53,9 @@ router.post("/assessment/start", menteeMiddleware, skillAssessmentControllers.st
 router.post("/assessment/submit", menteeMiddleware, skillAssessmentControllers.submitAssessment);
 router.get("/assessment/history", menteeMiddleware, skillAssessmentControllers.getAssessmentHistory);
 
+// New Job Application Routes
+router.get("/jobs/all", menteeMiddleware, menteeControllers.getAllJobs);
+router.post("/jobs/apply", menteeMiddleware, menteeControllers.applyToJob);
+router.get("/jobs/my-applications", menteeMiddleware, menteeControllers.getMyApplications);
 
 module.exports = router;

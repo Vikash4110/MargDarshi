@@ -4,7 +4,7 @@ import { useAuth } from "../store/auth";
 import MentorConnection from "../pages/MentorConnection";
 import UpdateCalendly from "../Components/UpdateCalendly";
 import { Link } from "react-router-dom";
-
+import PostedJobs from "../pages/PostedJobs";
 const MentorShow = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -175,6 +175,7 @@ const MentorShow = () => {
         </motion.div>
       </div>
       <MentorConnection />
+      <PostedJobs />
     </>
   );
 };

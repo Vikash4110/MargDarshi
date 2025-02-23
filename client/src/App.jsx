@@ -22,6 +22,9 @@ import VideoCall from './pages/VideoCall';
 import MenteeMain from './pages/MenteeMain';
 import LogOut from './Components/LogOut';
 import SkillAssessment from "./pages/SkillAssessment";
+import PostJob from "./pages/PostJob";
+import JobMenteeDashboard from "./pages/JobMenteeDashboard";
+import MentorJobApplicants from './pages/MentorJobaApplicants'
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -54,6 +57,9 @@ const App = () => {
         <Route path="/mentor-connection" element={<MentorConnection />} />
         <Route path="/mentee-accepted-req" element={<MenteeAcceptedReq />} />
         <Route path="/skill-assessment" element={<SkillAssessment />} />
+        <Route path="/post-job" element={<PostJob />} />
+        <Route path="/job-mentee-dashboard" element={<JobMenteeDashboard />} />
+        <Route path="/mentor-job-applicants/:jobId" element={<MentorJobApplicants />} />
         <Route path="/logout" element={<LogOut />} />
       </Routes>
     </Router>

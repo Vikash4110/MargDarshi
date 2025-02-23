@@ -347,9 +347,9 @@ const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const multer = require("multer");
 const mongoURI = process.env.MONGODB_URI;
-
+const JobPost = require("../models/job-post-model");
+const JobApplication = require("../models/job-application-model");
 const conn = mongoose.createConnection(mongoURI);
-
 let gridfsBucket;
 conn.once("open", () => {
   gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
@@ -655,6 +655,66 @@ const getImageById = async (req, res) => {
   }
 };
 
+// Get all available job posts
+const getAllJobs = async (req, res) => {
+    try {
+      const jobs = await JobPost.find({ status: "Open" }).populate(
+        "mentorId",
+        "fullName jobTitle company"
+      );
+      res.status(200).json({ jobs });
+    } catch (err) {
+      console.error("Error fetching jobs:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
+  // Apply to a job
+  const applyToJob = async (req, res) => {
+    try {
+      const { jobId, resumeUrl, coverLetter } = req.body;
+      const menteeId = req.user._id;
+  
+      const job = await JobPost.findById(jobId);
+      if (!job || job.status !== "Open") {
+        return res.status(404).json({ message: "Job not found or closed" });
+      }
+  
+      const existingApplication = await JobApplication.findOne({ jobId, menteeId });
+      if (existingApplication) {
+        return res.status(400).json({ message: "You have already applied to this job" });
+      }
+  
+      const application = new JobApplication({
+        jobId,
+        menteeId,
+        resumeUrl,
+        coverLetter,
+      });
+  
+      await application.save();
+      res.status(201).json({ message: "Application submitted successfully" });
+    } catch (err) {
+      console.error("Error applying to job:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
+  // Get mentee's job applications
+  const getMyApplications = async (req, res) => {
+    try {
+      const menteeId = req.user._id;
+      const applications = await JobApplication.find({ menteeId }).populate(
+        "jobId",
+        "title company location jobType"
+      );
+      res.status(200).json({ applications });
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+
 module.exports = {
   register,
   login,
@@ -667,4 +727,7 @@ module.exports = {
   withdrawRequest,
   getImageById,
   imageUpload,
+  getAllJobs,       
+  applyToJob,       
+  getMyApplications,
 };

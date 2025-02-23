@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
 const multer = require("multer");
 const mongoURI = process.env.MONGODB_URI;
-
+const JobPost = require("../models/job-post-model");
+const JobApplication = require("../models/job-application-model");
 const Mentee = require("../models/mentee-model");
 const ConnectionRequest = require("../models/connection-request-model");
 
@@ -475,10 +476,99 @@ const getImageById = async (req, res) => {
   }
 };
 
+// Post a new job
+const postJob = async (req, res) => {
+  try {
+    const {
+      title,
+      company,
+      location,
+      description,
+      requirements,
+      jobType,
+      salaryRange,
+      applicationDeadline,
+    } = req.body;
+    const mentorId = req.user._id;
+
+    const newJob = new JobPost({
+      mentorId,
+      title,
+      company,
+      location,
+      description,
+      requirements,
+      jobType,
+      salaryRange,
+      applicationDeadline,
+    });
+
+    await newJob.save();
+    res.status(201).json({ message: "Job posted successfully", job: newJob });
+  } catch (err) {
+    console.error("Error posting job:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Get all jobs posted by the mentor
+const getPostedJobs = async (req, res) => {
+  try {
+    const mentorId = req.user._id;
+    const jobs = await JobPost.find({ mentorId });
+    res.status(200).json({ jobs });
+  } catch (err) {
+    console.error("Error fetching posted jobs:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Get applicants for a specific job
+const getJobApplicants = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const mentorId = req.user._id;
+
+    const job = await JobPost.findOne({ _id: jobId, mentorId });
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or not owned by you" });
+    }
+
+    const applicants = await JobApplication.find({ jobId }).populate(
+      "menteeId",
+      "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy linkedInProfileUrl profilePicture"
+    );
+    res.status(200).json({ applicants });
+  } catch (err) {
+    console.error("Error fetching job applicants:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Update job status (e.g., close it)
+const updateJobStatus = async (req, res) => {
+  try {
+    const { jobId, status } = req.body;
+    const mentorId = req.user._id;
+
+    const job = await JobPost.findOneAndUpdate(
+      { _id: jobId, mentorId },
+      { status },
+      { new: true }
+    );
+    if (!job) {
+      return res.status(404).json({ message: "Job not found or not owned by you" });
+    }
+
+    res.status(200).json({ message: "Job status updated", job });
+  } catch (err) {
+    console.error("Error updating job status:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 
 
-
-module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById };
+module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus,};
 
 
  
