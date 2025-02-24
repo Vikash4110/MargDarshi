@@ -5,7 +5,7 @@ const { MenteeSignupSchema, MenteeLoginSchema } = require("../validators/mentee-
 const validate = require("../middlewares/validate-middleware");
 const menteeMiddleware = require("../middlewares/mentee-middleware");
 const skillAssessmentControllers = require("../controllers/skill-assessment-controller");
-const blogControllers = require("../controllers/blog-controller"); // Import blog controllers
+const blogControllers = require("../controllers/blog-controller");
 
 router.post("/mentee-register", menteeControllers.imageUpload, menteeControllers.register);
 router.post("/mentee-login", validate(MenteeLoginSchema), menteeControllers.login);
@@ -15,7 +15,7 @@ router.get("/mentee-matching-mentors", menteeMiddleware, menteeControllers.getMa
 router.post("/mentee-send-request", menteeMiddleware, menteeControllers.sendConnectionRequest);
 router.get("/mentee-connected-mentors", menteeMiddleware, menteeControllers.getConnectedMentors);
 router.get("/mentee-sent-requests", menteeMiddleware, menteeControllers.getSentRequests);
-router.delete("/mentee-withdraw-request", menteeMiddleware, menteeControllers.withdrawRequest); // Changed to POST
+router.delete("/mentee-withdraw-request", menteeMiddleware, menteeControllers.withdrawRequest);
 router.get("/images/:id", menteeControllers.getImageById);
 
 // Skill Assessment Routes
@@ -31,4 +31,7 @@ router.get("/jobs/my-applications", menteeMiddleware, menteeControllers.getMyApp
 
 // Blog Routes (Mentee access)
 router.get("/blogs/all", menteeMiddleware, blogControllers.getAllPublishedBlogs);
+
+
+// Export the router at the end
 module.exports = router;

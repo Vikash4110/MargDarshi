@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')).render(
       <App />
       <ToastContainer
         position="top-right" // Dynamic position, can be changed
-        autoClose={3000} // Closes after 3 seconds
+        autoClose={1000} // Closes after 3 seconds
         hideProgressBar={false} // Show progress bar for a premium feel
         newestOnTop={true} // Stack new toasts on top
         closeOnClick

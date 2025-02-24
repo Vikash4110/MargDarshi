@@ -1,11 +1,13 @@
+// src/pages/MentorConnection.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../store/auth";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FaEnvelope, FaPhone, FaGraduationCap, FaUniversity, FaBook, FaPaperPlane, FaTimes, FaCheck, FaCheckDouble } from "react-icons/fa";
+import { FaEnvelope, FaPhone, FaGraduationCap, FaUniversity, FaBook, FaPaperPlane, FaTimes, FaCheck, FaCheckDouble, FaVideo } from "react-icons/fa";
 import io from "socket.io-client";
 import Img from "../assets/profile2.jpg";
+import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 
 const MentorConnection = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -19,9 +21,12 @@ const MentorConnection = () => {
   const [newMessage, setNewMessage] = useState("");
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [unseenMessages, setUnseenMessages] = useState({});
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
+  const [videoCallError, setVideoCallError] = useState(null);
   const { authorizationToken, user, isLoading: authLoading } = useAuth();
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const videoCallRef = useRef(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -66,9 +71,7 @@ const MentorConnection = () => {
     });
 
     socketRef.current.on("messageStatusUpdate", ({ messageId, status }) => {
-      setMessages((prev) =>
-        prev.map((msg) => (msg._id === messageId ? { ...msg, status } : msg))
-      );
+      setMessages((prev) => prev.map((msg) => (msg._id === messageId ? { ...msg, status } : msg)));
     });
 
     fetchConnectedMentees();
@@ -77,6 +80,79 @@ const MentorConnection = () => {
       socketRef.current.disconnect();
     };
   }, [user, authLoading, authorizationToken, backendUrl, isChatOpen, selectedMentee]);
+
+  useEffect(() => {
+    if (!isVideoCallOpen || !selectedMentee || !user || !videoCallRef.current) return;
+
+    const startVideoCall = async () => {
+      const channelName = `mentor-${user._id}-mentee-${selectedMentee._id}`;
+      const appID = Number(import.meta.env.VITE_ZEGO_APP_ID);
+      const serverSecret = import.meta.env.VITE_ZEGO_SERVER_SECRET;
+
+      try {
+        console.log("Requesting media permissions...");
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        console.log("Permissions granted");
+
+        console.log("Generating ZegoCloud kit token with App ID:", appID, "Channel:", channelName);
+        const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+          appID,
+          serverSecret,
+          channelName,
+          user._id,
+          user.fullName
+        );
+        console.log("Test kit token generated successfully:", kitToken);
+
+        const zp = ZegoUIKitPrebuilt.create(kitToken);
+        console.log("ZegoUIKitPrebuilt instance created");
+
+        zp.joinRoom({
+          container: videoCallRef.current,
+          scenario: {
+            mode: ZegoUIKitPrebuilt.VideoConference,
+          },
+          showPreJoinView: false,
+          showRoomTimer: true,
+          turnOnCameraWhenJoining: true,
+          turnOnMicrophoneWhenJoining: true,
+          onJoinRoom: () => {
+            console.log("Joined video call room successfully");
+          },
+          onLeaveRoom: () => {
+            setIsVideoCallOpen(false);
+            setSelectedMentee(null);
+            console.log("Left video call");
+          },
+          onUserJoin: (users) => {
+            console.log("User joined:", users);
+          },
+          onUserLeave: (users) => {
+            console.log("User left:", users);
+          },
+          onLocalStreamPublished: () => {
+            console.log("Local stream published successfully");
+          },
+          onLocalStreamMirrorModeChanged: (mode) => {
+            console.log("Local stream mirror mode changed:", mode);
+          },
+          onError: (error) => {
+            console.error("ZegoCloud error:", error);
+            setVideoCallError(`Error ${error.code}: ${error.message || "Failed to join video call"}`);
+            toast.error(`Video call error: ${error.code} - ${error.message || "Unknown error"}`);
+          },
+        });
+      } catch (err) {
+        console.error("Error starting video call:", err);
+        setVideoCallError(err.message || "Failed to start video call - check camera/microphone permissions");
+        toast.error("Failed to start video call: " + (err.message || "Unknown error"));
+        setIsVideoCallOpen(false);
+        setSelectedMentee(null);
+      }
+    };
+
+    startVideoCall();
+  }, [isVideoCallOpen, selectedMentee, user, videoCallRef.current]);
 
   const fetchConnectedMentees = async () => {
     setLoading(true);
@@ -112,7 +188,7 @@ const MentorConnection = () => {
       if (!response.ok) throw new Error("Failed to fetch messages");
       const data = await response.json();
       setMessages(data.messages);
-      setTimeout(scrollToBottom, 0); // Ensure scroll happens after render
+      setTimeout(scrollToBottom, 0);
     } catch (err) {
       toast.error("Error fetching messages");
     }
@@ -163,6 +239,13 @@ const MentorConnection = () => {
     }
   };
 
+  const handleVideoCall = (mentee) => {
+    console.log("Video call button clicked for mentee:", mentee._id);
+    setSelectedMentee(mentee);
+    setIsVideoCallOpen(true);
+    setVideoCallError(null);
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -207,7 +290,7 @@ const MentorConnection = () => {
         {filteredMentees.map((mentee) => (
           <motion.div
             key={mentee._id}
-            className="relative bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden"
+            className="relative bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300"
             whileHover={{ scale: 1.03, boxShadow: "0 20px 40px rgba(0, 0, 0, 0.1)" }}
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0f6f5c] to-teal-400" />
@@ -257,15 +340,24 @@ const MentorConnection = () => {
                 <p>{mentee.fieldOfStudy || "N/A"}</p>
               </div>
             </div>
-            <div className="mt-4 flex justify-center">
+            <div className="mt-4 flex justify-center space-x-4">
               <motion.button
                 onClick={() => handleOpenChat(mentee)}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-semibold shadow-md hover:from-blue-600 hover:to-blue-800 transition duration-300"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-lg font-semibold shadow-md hover:from-blue-600 hover:to-blue-800 transition duration-300 flex items-center"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <FaPaperPlane className="mr-2 inline" />
+                <FaPaperPlane className="mr-2" />
                 Message
+              </motion.button>
+              <motion.button
+                onClick={() => handleVideoCall(mentee)}
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-lg font-semibold shadow-md hover:from-teal-600 hover:to-teal-800 transition duration-300 flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaVideo className="mr-2" />
+                Video Call
               </motion.button>
             </div>
           </motion.div>
@@ -351,11 +443,30 @@ const MentorConnection = () => {
           </motion.div>
         </motion.div>
       )}
+
+      {isVideoCallOpen && (
+        <motion.div
+          className="fixed inset-0 w-full h-full z-[1000]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-full h-full bg-black relative">
+            {videoCallError ? (
+              <div className="flex items-center justify-center h-full text-red-500 text-lg font-semibold">
+                {videoCallError}
+              </div>
+            ) : (
+              <div ref={videoCallRef} className="w-full h-full" />
+            )}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
 
-// Helper Components
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500" />
