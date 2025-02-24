@@ -9,8 +9,8 @@ import Section6 from "../Components/Section6";
 import Section7 from "../Components/Section7";
 import Footer from "../Components/Footer";
 import { FaCommentDots } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion"; // Added motion import
-import Chatbot from "../pages/Chatbot"; // Ensure this matches the file name
+import { motion, AnimatePresence } from "framer-motion"; 
+import Chatbot from "../pages/ChatBot"; 
 import MenteeB from "../Components/MenteeB";
 
 const Home = () => {
