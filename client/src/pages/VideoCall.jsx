@@ -1,6 +1,7 @@
 // src/components/VideoCall.jsx
 import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import AgoraRTC from "agora-rtc-sdk-ng";
 import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash, FaTimes } from "react-icons/fa";
 import { useAuth } from "../store/auth";
 import { toast } from "react-toastify";
