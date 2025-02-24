@@ -18,7 +18,6 @@ import MentorDashboard from './pages/MentorDashboard';
 import MentorShow from './pages/MentorShow';
 import MentorConnection from './pages/MentorConnection';
 import MenteeAcceptedReq from './pages/MenteeAcceptedReq';
-import VideoCall from './pages/VideoCall';
 import MenteeMain from './pages/MenteeMain';
 import LogOut from './Components/LogOut';
 import SkillAssessment from "./pages/SkillAssessment";
@@ -55,7 +54,6 @@ const App = () => {
         <Route path="/mentor-dashboard" element={<MentorDashboard />} />
         <Route path="/mentee-dashboard" element={<MenteeDashboard />} />
         <Route path="/mentor-show" element={<MentorShow />} />
-        <Route path="/video-call" element={<VideoCall />} />
         <Route path="/mentee-main" element={<MenteeMain />} />
         <Route path="/mentor-connection" element={<MentorConnection />} />
         <Route path="/mentee-accepted-req" element={<MenteeAcceptedReq />} />

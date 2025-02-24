@@ -17,7 +17,6 @@
     "@heroicons/react": "^2.1.5",
     "@material-tailwind/react": "^2.1.10",
     "@zegocloud/zego-uikit-prebuilt": "^2.14.1",
-    "agora-rtc-sdk-ng": "^4.23.1",
     "aos": "^2.3.4",
     "flowbite-react": "^0.10.1",
     "framer-motion": "^12.4.7",
