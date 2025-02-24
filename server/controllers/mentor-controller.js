@@ -1,3 +1,100 @@
+// const Mentor = require("../models/mentor-model");
+// const mongoose = require("mongoose");
+// const { GridFSBucket } = require("mongodb");
+// const multer = require("multer");
+// const mongoURI = process.env.MONGODB_URI;
+// const JobPost = require("../models/job-post-model");
+// const JobApplication = require("../models/job-application-model");
+// const Mentee = require("../models/mentee-model");
+// const ConnectionRequest = require("../models/connection-request-model");
+
+
+// const conn = mongoose.createConnection(mongoURI);
+
+// let gridfsBucket;
+// conn.once("open", () => {
+//   gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
+//   console.log("GridFS Bucket Ready in mentor-controller");
+// });
+
+// // Multer configuration (single file)
+// const imageUpload = multer({
+//   storage: multer.memoryStorage(),
+// }).single("profilePicture"); // Accepts only one file
+
+// const register = async (req, res) => {
+//   try {
+//     const {
+//       fullName,
+//       email,
+//       password,
+//       phoneNumber,
+//       jobTitle,
+//       industry,
+//       yearsOfExperience,
+//       company,
+//       linkedInUrl,
+//       skills,
+//       mentorshipTopics,
+//       bio,
+//     } = req.body;
+//     console.log("Raw req.body:", req.body); // Debugging log
+
+//     let profilePicture = "";
+
+//     // Process profilePicture (only one image allowed)
+//     if (req.file) {
+//       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
+//         contentType: req.file.mimetype,
+//       });
+
+//       uploadStream.end(req.file.buffer);
+//       await new Promise((resolve, reject) => {
+//         uploadStream.on("finish", () => {
+//           profilePicture = uploadStream.id; // Store only one image ID
+//           resolve();
+//         });
+//         uploadStream.on("error", reject);
+//       });
+//     }
+
+//     // Check if user already exists
+//     const userExist = await Mentor.findOne({ email });
+//     if (userExist) {
+//       return res.status(400).json({ message: "Email already exists" });
+//     }
+
+//     // Create a new mentor
+//     const newUser = new Mentor({
+//       fullName,
+//       email,
+//       password,
+//       phoneNumber,
+//       jobTitle,
+//       industry,
+//       yearsOfExperience,
+//       company,
+//       linkedInUrl,
+//       skills,
+//       mentorshipTopics,
+//       bio,
+//       profilePicture,
+//     });
+
+//     await newUser.save();
+
+//     res.status(201).json({
+//       message: "Registration Successful",
+//       token: await newUser.generateToken(),
+//       userId: newUser._id.toString(),
+//     });
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
+// controllers/mentor-controller.js
 const Mentor = require("../models/mentor-model");
 const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
@@ -7,7 +104,6 @@ const JobPost = require("../models/job-post-model");
 const JobApplication = require("../models/job-application-model");
 const Mentee = require("../models/mentee-model");
 const ConnectionRequest = require("../models/connection-request-model");
-
 
 const conn = mongoose.createConnection(mongoURI);
 
@@ -20,7 +116,7 @@ conn.once("open", () => {
 // Multer configuration (single file)
 const imageUpload = multer({
   storage: multer.memoryStorage(),
-}).single("profilePicture"); // Accepts only one file
+}).single("profilePicture");
 
 const register = async (req, res) => {
   try {
@@ -38,11 +134,9 @@ const register = async (req, res) => {
       mentorshipTopics,
       bio,
     } = req.body;
-    console.log("Raw req.body:", req.body); // Debugging log
 
     let profilePicture = "";
 
-    // Process profilePicture (only one image allowed)
     if (req.file) {
       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
         contentType: req.file.mimetype,
@@ -51,20 +145,18 @@ const register = async (req, res) => {
       uploadStream.end(req.file.buffer);
       await new Promise((resolve, reject) => {
         uploadStream.on("finish", () => {
-          profilePicture = uploadStream.id; // Store only one image ID
+          profilePicture = uploadStream.id;
           resolve();
         });
         uploadStream.on("error", reject);
       });
     }
 
-    // Check if user already exists
     const userExist = await Mentor.findOne({ email });
     if (userExist) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // Create a new mentor
     const newUser = new Mentor({
       fullName,
       email,
@@ -72,7 +164,7 @@ const register = async (req, res) => {
       phoneNumber,
       jobTitle,
       industry,
-      yearsOfExperience,
+      yearsOfExperience: Number(yearsOfExperience), // Ensure it's a number
       company,
       linkedInUrl,
       skills,
@@ -90,134 +182,10 @@ const register = async (req, res) => {
     });
   } catch (err) {
     console.error("Registration error:", err);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 };
 
-
-// const Mentor = require("../models/mentor-model");
-// const Mentee = require("../models/mentee-model");
-// const ConnectionRequest = require("../models/connection-request-model");
-
-
-// const register = async (req, res) => {
-//   try {
-//     const {
-//       fullName,
-//       email,
-//       password,
-//       phoneNumber,
-//       jobTitle,
-//       industry,
-//       yearsOfExperience,
-//       company,
-//       linkedInUrl,
-//       skills,
-//       mentorshipTopics,
-//       bio
-//     } = req.body;
-
-//     if (!req.file) {
-//       return res.status(400).json({ message: "Profile picture is required" });
-//     }
-
-//     const userExist = await Mentor.findOne({ email });
-//     if (userExist) {
-//       return res.status(400).json({ message: "Email already exists" });
-//     }
-
-//     // Upload file to GridFS
-//     const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
-//       metadata: {
-//         contentType: req.file.mimetype,
-//       },
-//     });
-
-//     uploadStream.end(req.file.buffer);
-
-//     uploadStream.on('finish', async () => {
-//       const newUser = new Mentor({
-//         fullName,
-//         email,
-//         password,
-//         phoneNumber,
-//         jobTitle,
-//         industry,
-//         profilePicture: uploadStream.id, // Save the file ID
-//         yearsOfExperience,
-//         company,
-//         linkedInUrl,
-//         skills,
-//         mentorshipTopics,
-//         bio
-//       });
-
-//       await newUser.save();
-
-//       res.status(201).json({
-//         message: "Registration Successful",
-//         token: await newUser.generateToken(),
-//         userId: newUser._id.toString(),
-//       });
-//     });
-
-//   } catch (err) {
-//     console.error("Registration error:", err);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
-
-// const register = async (req, res) => {
-//   try {
-//       const {
-//           fullName,
-//           email,
-//           password,
-//           phoneNumber,
-//           jobTitle,
-//           industry,
-//           yearsOfExperience,
-//           company,
-//           linkedInUrl,
-//           skills,
-//           mentorshipTopics,
-//           bio
-//       } = req.body;
-
-//       // Check if user already exists
-//       const userExist = await Mentor.findOne({ email });
-//       if (userExist) {
-//           return res.status(400).json({ message: "Email already exists" });
-//       }
-
-//       // Create a new mentor
-//       const newUser = new Mentor({
-//           fullName,
-//           email,
-//           password,
-//           phoneNumber,
-//           jobTitle,
-//           industry,
-//           yearsOfExperience,
-//           company,
-//           linkedInUrl,
-//           skills,
-//           mentorshipTopics,
-//           bio
-//       });
-
-//       await newUser.save();
-
-//       res.status(201).json({
-//           message: "Registration Successful",
-//           token: await newUser.generateToken(),
-//           userId: newUser._id.toString(),
-//       });
-//   } catch (err) {
-//       console.error("Registration error:", err);
-//       res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
 
 
 // Mentor login
@@ -346,60 +314,7 @@ const respondToConnectionRequest = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// const respondToConnectionRequest = async (req, res) => {
-//     try {
-//       const { requestId, status } = req.body;
-//       const mentorId = req.user._id;
-  
-//       if (!requestId || !status) {
-//         return res.status(400).json({ message: "Request ID and status are required" });
-//       }
-  
-//       if (!["accepted", "rejected"].includes(status)) {
-//         return res.status(400).json({ message: "Invalid status" });
-//       }
-  
-//       // Find the request
-//       const request = await ConnectionRequest.findById(requestId).populate(
-//         "menteeId"
-//       );
-  
-//       if (!request) {
-//         return res.status(404).json({ message: "Request not found" });
-//       }
-  
-//       if (request.mentorId.toString() !== mentorId.toString()) {
-//         return res.status(403).json({ message: "Unauthorized" });
-//       }
-  
-//       // Update the request status
-//       request.status = status;
-//       await request.save();
-  
-//       if (status === "accepted") {
-//         // Add mentor to mentee's connectedMentors
-//         const mentee = await Mentee.findById(request.menteeId);
-//         if (!mentee) {
-//           return res.status(404).json({ message: "Mentee not found" });
-//         }
-//         mentee.connectedMentors.push(mentorId);
-//         await mentee.save();
-  
-//         // Add mentee to mentor's connectedMentees
-//         const mentor = await Mentor.findById(mentorId);
-//         if (!mentor) {
-//           return res.status(404).json({ message: "Mentor not found" });
-//         }
-//         mentor.connectedMentees.push(request.menteeId);
-//         await mentor.save();
-//       }
-  
-//       res.status(200).json({ message: `Request ${status}` });
-//     } catch (err) {
-//       console.error("Error responding to connection request:", err);
-//       res.status(500).json({ message: "Internal Server Error" });
-//     }
-//   };
+
 
 const getAllMentors = async (req, res) => {
     try {
@@ -411,22 +326,6 @@ const getAllMentors = async (req, res) => {
     }
 };
 
-// const getPendingRequests = async (req, res) => {
-//     try {
-//         const mentorId = req.user._id;
-
-//         // Fetch all pending requests for the mentor
-//         const pendingRequests = await ConnectionRequest.find({
-//             mentorId,
-//             status: "pending",
-//         }).populate("menteeId", "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy");
-
-//         res.status(200).json({ pendingRequests });
-//     } catch (err) {
-//         console.error("Error fetching pending requests:", err);
-//         res.status(500).json({ message: "Internal Server Error" });
-//     }
-// };
 
 const getPendingRequests = async (req, res) => {
   try {
@@ -474,26 +373,6 @@ const getConnectedMentees = async (req, res) => {
   }
 };
 
-// const getConnectedMentees = async (req, res) => {
-//     try {
-//       const mentorId = req.user._id;
-  
-//       // Find the mentor and populate the connectedMentees field
-//       const mentor = await Mentor.findById(mentorId).populate(
-//         "connectedMentees",
-//         "fullName email phoneNumber currentEducationLevel universityName fieldOfStudy profilePicture"
-//       );
-  
-//       if (!mentor) {
-//         return res.status(404).json({ message: "Mentor not found" });
-//       }
-  
-//       res.status(200).json({ connectedMentees: mentor.connectedMentees });
-//     } catch (err) {
-//       console.error("Error fetching connected mentees:", err);
-//       res.status(500).json({ message: "Internal Server Error" });
-//     }
-//   };
 
 
   const updateCalendlyLink = async (req, res) => {

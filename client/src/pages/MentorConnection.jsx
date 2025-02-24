@@ -357,7 +357,7 @@ const MentorConnection = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <FaVideo className="mr-2" />
-                Video Call
+                Video Conferencing
               </motion.button>
             </div>
           </motion.div>

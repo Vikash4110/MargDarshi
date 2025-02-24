@@ -6,10 +6,17 @@ const validate = require("../middlewares/validate-middleware");
 const mentorMiddleware = require("../middlewares/mentor-middleware");
 const blogControllers = require("../controllers/blog-controller");
 
-// Mentor registration route
+// Mentor registration route with validation
 router.route("/mentor-register")
     .post(
         mentorControllers.imageUpload, // Multer middleware for file upload
+        (req, res, next) => {
+            // Preprocess skills and mentorshipTopics from FormData
+            if (req.body.skills) req.body.skills = JSON.parse(req.body.skills);
+            if (req.body.mentorshipTopics) req.body.mentorshipTopics = JSON.parse(req.body.mentorshipTopics);
+            next();
+        },
+        validate(SignupSchema), // Validate after preprocessing
         mentorControllers.register // Registration controller
     );
 
@@ -36,5 +43,4 @@ router.patch("/mentor-blogs/update", mentorMiddleware, blogControllers.updateBlo
 router.delete("/mentor-blogs/delete/:blogId", mentorMiddleware, blogControllers.deleteBlog);
 router.get("/mentor-blogs/:mentorId?", mentorMiddleware, blogControllers.getMentorBlogs);
 
-// Export the router at the end
 module.exports = router;

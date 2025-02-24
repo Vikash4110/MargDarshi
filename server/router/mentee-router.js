@@ -7,7 +7,28 @@ const menteeMiddleware = require("../middlewares/mentee-middleware");
 const skillAssessmentControllers = require("../controllers/skill-assessment-controller");
 const blogControllers = require("../controllers/blog-controller");
 
-router.post("/mentee-register", menteeControllers.imageUpload, menteeControllers.register);
+// Mentee registration route with preprocessing and validation
+router.post(
+  "/mentee-register",
+  menteeControllers.imageUpload,
+  (req, res, next) => {
+    // Preprocess JSON-stringified array fields and number fields from FormData
+    try {
+      if (req.body.careerInterests) req.body.careerInterests = JSON.parse(req.body.careerInterests);
+      if (req.body.desiredIndustry) req.body.desiredIndustry = JSON.parse(req.body.desiredIndustry);
+      if (req.body.skillsToDevelop) req.body.skillsToDevelop = JSON.parse(req.body.skillsToDevelop);
+      if (req.body.typeOfMentorshipSought) req.body.typeOfMentorshipSought = JSON.parse(req.body.typeOfMentorshipSought);
+      if (req.body.preferredDaysAndTimes) req.body.preferredDaysAndTimes = JSON.parse(req.body.preferredDaysAndTimes);
+      if (req.body.expectedGraduationYear) req.body.expectedGraduationYear = Number(req.body.expectedGraduationYear);
+    } catch (err) {
+      return res.status(400).json({ message: "Invalid format in form data", error: err.message });
+    }
+    next();
+  },
+  validate(MenteeSignupSchema),
+  menteeControllers.register
+);
+
 router.post("/mentee-login", validate(MenteeLoginSchema), menteeControllers.login);
 router.get("/mentee-user", menteeMiddleware, menteeControllers.mentee);
 router.patch("/mentee-update", menteeMiddleware, menteeControllers.updateUser);
@@ -32,6 +53,4 @@ router.get("/jobs/my-applications", menteeMiddleware, menteeControllers.getMyApp
 // Blog Routes (Mentee access)
 router.get("/blogs/all", menteeMiddleware, blogControllers.getAllPublishedBlogs);
 
-
-// Export the router at the end
 module.exports = router;
