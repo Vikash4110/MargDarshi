@@ -52,5 +52,5 @@ router.get("/jobs/my-applications", menteeMiddleware, menteeControllers.getMyApp
 
 // Blog Routes (Mentee access)
 router.get("/blogs/all", menteeMiddleware, blogControllers.getAllPublishedBlogs);
-
+router.post("/mentee-schedule-video-call", menteeMiddleware, menteeControllers.scheduleVideoCall);
 module.exports = router;

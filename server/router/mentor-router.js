@@ -42,5 +42,5 @@ router.post("/mentor-blogs/create", mentorMiddleware, blogControllers.createBlog
 router.patch("/mentor-blogs/update", mentorMiddleware, blogControllers.updateBlog);
 router.delete("/mentor-blogs/delete/:blogId", mentorMiddleware, blogControllers.deleteBlog);
 router.get("/mentor-blogs/:mentorId?", mentorMiddleware, blogControllers.getMentorBlogs);
-
+router.post("/mentor-schedule-video-call", mentorMiddleware, mentorControllers.scheduleVideoCall);
 module.exports = router;

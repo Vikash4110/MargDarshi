@@ -9,6 +9,7 @@ import io from "socket.io-client";
 import Img from "../assets/profile2.jpg";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 
+
 const MentorConnection = () => {
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [connectedMentees, setConnectedMentees] = useState([]);
@@ -27,6 +28,7 @@ const MentorConnection = () => {
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const videoCallRef = useRef(null);
+
 
   useEffect(() => {
     if (authLoading) return;
@@ -175,6 +177,7 @@ const MentorConnection = () => {
       setLoading(false);
     }
   };
+  
 
   const fetchMessages = async (menteeId) => {
     try {
@@ -239,11 +242,36 @@ const MentorConnection = () => {
     }
   };
 
-  const handleVideoCall = (mentee) => {
+  // const handleVideoCall = (mentee) => {
+  //   console.log("Video call button clicked for mentee:", mentee._id);
+  //   setSelectedMentee(mentee);
+  //   setIsVideoCallOpen(true);
+  //   setVideoCallError(null);
+  // };
+  const handleVideoCall = async (mentee) => {
     console.log("Video call button clicked for mentee:", mentee._id);
     setSelectedMentee(mentee);
     setIsVideoCallOpen(true);
     setVideoCallError(null);
+  
+    // Send email notification to mentee
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/mentor-schedule-video-call`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authorizationToken,
+        },
+        body: JSON.stringify({ menteeId: mentee._id }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to schedule video call");
+      toast.success("Video call scheduled! Email sent to mentee.");
+    } catch (err) {
+      console.error("Error scheduling video call:", err);
+      toast.error("Failed to notify mentee: " + (err.message || "Unknown error"));
+    }
   };
 
   const scrollToBottom = () => {

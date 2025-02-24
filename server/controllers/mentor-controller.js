@@ -1,99 +1,3 @@
-// const Mentor = require("../models/mentor-model");
-// const mongoose = require("mongoose");
-// const { GridFSBucket } = require("mongodb");
-// const multer = require("multer");
-// const mongoURI = process.env.MONGODB_URI;
-// const JobPost = require("../models/job-post-model");
-// const JobApplication = require("../models/job-application-model");
-// const Mentee = require("../models/mentee-model");
-// const ConnectionRequest = require("../models/connection-request-model");
-
-
-// const conn = mongoose.createConnection(mongoURI);
-
-// let gridfsBucket;
-// conn.once("open", () => {
-//   gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
-//   console.log("GridFS Bucket Ready in mentor-controller");
-// });
-
-// // Multer configuration (single file)
-// const imageUpload = multer({
-//   storage: multer.memoryStorage(),
-// }).single("profilePicture"); // Accepts only one file
-
-// const register = async (req, res) => {
-//   try {
-//     const {
-//       fullName,
-//       email,
-//       password,
-//       phoneNumber,
-//       jobTitle,
-//       industry,
-//       yearsOfExperience,
-//       company,
-//       linkedInUrl,
-//       skills,
-//       mentorshipTopics,
-//       bio,
-//     } = req.body;
-//     console.log("Raw req.body:", req.body); // Debugging log
-
-//     let profilePicture = "";
-
-//     // Process profilePicture (only one image allowed)
-//     if (req.file) {
-//       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
-//         contentType: req.file.mimetype,
-//       });
-
-//       uploadStream.end(req.file.buffer);
-//       await new Promise((resolve, reject) => {
-//         uploadStream.on("finish", () => {
-//           profilePicture = uploadStream.id; // Store only one image ID
-//           resolve();
-//         });
-//         uploadStream.on("error", reject);
-//       });
-//     }
-
-//     // Check if user already exists
-//     const userExist = await Mentor.findOne({ email });
-//     if (userExist) {
-//       return res.status(400).json({ message: "Email already exists" });
-//     }
-
-//     // Create a new mentor
-//     const newUser = new Mentor({
-//       fullName,
-//       email,
-//       password,
-//       phoneNumber,
-//       jobTitle,
-//       industry,
-//       yearsOfExperience,
-//       company,
-//       linkedInUrl,
-//       skills,
-//       mentorshipTopics,
-//       bio,
-//       profilePicture,
-//     });
-
-//     await newUser.save();
-
-//     res.status(201).json({
-//       message: "Registration Successful",
-//       token: await newUser.generateToken(),
-//       userId: newUser._id.toString(),
-//     });
-//   } catch (err) {
-//     console.error("Registration error:", err);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };
-
 // controllers/mentor-controller.js
 const Mentor = require("../models/mentor-model");
 const mongoose = require("mongoose");
@@ -104,7 +8,7 @@ const JobPost = require("../models/job-post-model");
 const JobApplication = require("../models/job-application-model");
 const Mentee = require("../models/mentee-model");
 const ConnectionRequest = require("../models/connection-request-model");
-
+const nodemailer = require("nodemailer");
 const conn = mongoose.createConnection(mongoURI);
 
 let gridfsBucket;
@@ -552,7 +456,62 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
-module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus};
+// Email transporter setup (configure with your SMTP service, e.g., Gmail)
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER, // Your email address (set in .env)
+    pass: process.env.EMAIL_PASS, // Your email password or app-specific password (set in .env)
+  },
+});
+
+// Function to send video call notification email
+const sendVideoCallEmail = async (menteeId, mentorId) => {
+  try {
+    const mentee = await Mentee.findById(menteeId);
+    const mentor = await Mentor.findById(mentorId);
+
+    if (!mentee || !mentor) {
+      throw new Error("Mentee or Mentor not found");
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: mentee.email,
+      subject: "Video Call Scheduled - Join Now!",
+      html: `
+        <p>Hello ${mentee.fullName},</p>
+        <p>Your mentor, ${mentor.fullName}, has scheduled a video call with you.</p>
+        <p>Please join the meeting now by logging into MargDarshi and clicking the "Video Call" button in your connected mentors list.</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+        <p>Best regards,<br/>The MargDarshi Team</p>
+      `,
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Video call email sent to ${mentee.email}`);
+  } catch (error) {
+    console.error("Error sending video call email:", error);
+    throw error;
+  }
+};
+
+// New route handler for scheduling video call and sending email
+const scheduleVideoCall = async (req, res) => {
+  try {
+    const { menteeId } = req.body;
+    const mentorId = req.user._id;
+
+    await sendVideoCallEmail(menteeId, mentorId);
+    res.status(200).json({ message: "Video call scheduled and email sent successfully" });
+  } catch (err) {
+    console.error("Error scheduling video call:", err);
+    res.status(500).json({ message: "Failed to schedule video call", error: err.message });
+  }
+};
+
+module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,};
 
 
  

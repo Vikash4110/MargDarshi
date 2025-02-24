@@ -212,6 +212,8 @@ const MenteeAcceptedReq = () => {
     setUnseenMessages((prev) => ({ ...prev, [mentor._id]: 0 }));
   };
 
+
+
   const fetchMessages = async (mentorId) => {
     try {
       const response = await fetch(`${backendUrl}/api/auth/messages/${user._id}/${mentorId}`, {
@@ -264,11 +266,36 @@ const MenteeAcceptedReq = () => {
     }
   };
 
-  const handleVideoCall = (mentor) => {
+  // const handleVideoCall = (mentor) => {
+  //   console.log("Video call button clicked for mentor:", mentor._id);
+  //   setSelectedMentor(mentor);
+  //   setIsVideoCallOpen(true);
+  //   setVideoCallError(null);
+  // };
+  const handleVideoCall = async (mentor) => {
     console.log("Video call button clicked for mentor:", mentor._id);
     setSelectedMentor(mentor);
     setIsVideoCallOpen(true);
     setVideoCallError(null);
+  
+    // Send email notification to mentor
+    try {
+      const response = await fetch(`${backendUrl}/api/auth/mentee-schedule-video-call`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authorizationToken,
+        },
+        body: JSON.stringify({ mentorId: mentor._id }),
+      });
+  
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to schedule video call");
+      toast.success("Video call scheduled! Email sent to mentor.");
+    } catch (err) {
+      console.error("Error scheduling video call:", err);
+      toast.error("Failed to notify mentor: " + (err.message || "Unknown error"));
+    }
   };
 
   const scrollToBottom = () => {
