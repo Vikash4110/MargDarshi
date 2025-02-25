@@ -10,7 +10,7 @@ import Section7 from "../Components/Section7";
 import Footer from "../Components/Footer";
 import { FaCommentDots } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion"; 
-import ChatBot from "../pages/ChatBot" 
+import ChatBot from "../pages/ChatBot"; 
 import MenteeB from "../Components/MenteeB";
 
 const Home = () => {
@@ -85,7 +85,7 @@ const Home = () => {
       </motion.div>
 
       {/* Chatbot Component */}
-      {isChatbotOpen && <Chatbot onClose={() => setIsChatbotOpen(false)} />}
+      {isChatbotOpen && <ChatBot onClose={() => setIsChatbotOpen(false)} />}
       </div>
     </>
     
