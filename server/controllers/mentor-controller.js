@@ -1,4 +1,95 @@
-// controllers/mentor-controller.js
+// // controllers/mentor-controller.js
+// const Mentor = require("../models/mentor-model");
+// const mongoose = require("mongoose");
+// const { GridFSBucket } = require("mongodb");
+// const multer = require("multer");
+// const mongoURI = process.env.MONGODB_URI;
+// const JobPost = require("../models/job-post-model");
+// const JobApplication = require("../models/job-application-model");
+// const Mentee = require("../models/mentee-model");
+// const ConnectionRequest = require("../models/connection-request-model");
+// const nodemailer = require("nodemailer");
+// const conn = mongoose.createConnection(mongoURI);
+
+// let gridfsBucket;
+// conn.once("open", () => {
+//   gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
+//   console.log("GridFS Bucket Ready in mentor-controller");
+// });
+
+// // Multer configuration (single file)
+// const imageUpload = multer({
+//   storage: multer.memoryStorage(),
+// }).single("profilePicture");
+
+// const register = async (req, res) => {
+//   try {
+//     const {
+//       fullName,
+//       email,
+//       password,
+//       phoneNumber,
+//       jobTitle,
+//       industry,
+//       yearsOfExperience,
+//       company,
+//       linkedInUrl,
+//       skills,
+//       mentorshipTopics,
+//       bio,
+//     } = req.body;
+
+//     let profilePicture = "";
+
+//     if (req.file) {
+//       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
+//         contentType: req.file.mimetype,
+//       });
+
+//       uploadStream.end(req.file.buffer);
+//       await new Promise((resolve, reject) => {
+//         uploadStream.on("finish", () => {
+//           profilePicture = uploadStream.id;
+//           resolve();
+//         });
+//         uploadStream.on("error", reject);
+//       });
+//     }
+
+//     const userExist = await Mentor.findOne({ email });
+//     if (userExist) {
+//       return res.status(400).json({ message: "Email already exists" });
+//     }
+
+//     const newUser = new Mentor({
+//       fullName,
+//       email,
+//       password,
+//       phoneNumber,
+//       jobTitle,
+//       industry,
+//       yearsOfExperience: Number(yearsOfExperience), // Ensure it's a number
+//       company,
+//       linkedInUrl,
+//       skills,
+//       mentorshipTopics,
+//       bio,
+//       profilePicture,
+//     });
+
+//     await newUser.save();
+
+//     res.status(201).json({
+//       message: "Registration Successful",
+//       token: await newUser.generateToken(),
+//       userId: newUser._id.toString(),
+//     });
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     res.status(500).json({ message: "Internal Server Error", error: err.message });
+//   }
+// };
+
 const Mentor = require("../models/mentor-model");
 const mongoose = require("mongoose");
 const { GridFSBucket } = require("mongodb");
@@ -9,6 +100,8 @@ const JobApplication = require("../models/job-application-model");
 const Mentee = require("../models/mentee-model");
 const ConnectionRequest = require("../models/connection-request-model");
 const nodemailer = require("nodemailer");
+const bcrypt = require("bcryptjs");
+
 const conn = mongoose.createConnection(mongoURI);
 
 let gridfsBucket;
@@ -22,6 +115,42 @@ const imageUpload = multer({
   storage: multer.memoryStorage(),
 }).single("profilePicture");
 
+// Email transporter setup
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Generate OTP
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Send OTP Email
+const sendOTPEmail = async (email, otp) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "MargDarshi - Verify Your Email",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="color: #0f6f5c; text-align: center;">Welcome to MargDarshi!</h2>
+        <p style="color: #333; font-size: 16px;">Please use the OTP below to verify your email address:</p>
+        <h3 style="color: #0f6f5c; text-align: center; font-size: 24px; margin: 20px 0;">${otp}</h3>
+        <p style="color: #666; font-size: 14px; text-align: center;">This OTP is valid for 10 minutes.</p>
+        <p style="color: #666; font-size: 14px; text-align: center;">If you didn’t request this, please ignore this email.</p>
+      </div>
+    `,
+  };
+  await transporter.sendMail(mailOptions);
+  console.log(`OTP sent to ${email}`);
+};
+
+// Store OTPs temporarily (in-memory for simplicity, use Redis/MongoDB in production)
+const otpStore = new Map();
+
+// Register with OTP initiation
 const register = async (req, res) => {
   try {
     const {
@@ -40,16 +169,14 @@ const register = async (req, res) => {
     } = req.body;
 
     let profilePicture = "";
-
     if (req.file) {
       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
         contentType: req.file.mimetype,
       });
-
       uploadStream.end(req.file.buffer);
       await new Promise((resolve, reject) => {
         uploadStream.on("finish", () => {
-          profilePicture = uploadStream.id;
+          profilePicture = uploadStream.id.toString();
           resolve();
         });
         uploadStream.on("error", reject);
@@ -61,6 +188,42 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
+    const otp = generateOTP();
+    await sendOTPEmail(email, otp);
+    otpStore.set(email, { otp, data: { ...req.body, profilePicture }, expires: Date.now() + 10 * 60 * 1000 });
+
+    res.status(200).json({ message: "OTP sent to your email. Please verify." });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Verify OTP and complete registration
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const stored = otpStore.get(email);
+    if (!stored || stored.otp !== otp || Date.now() > stored.expires) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const {
+      fullName,
+      password,
+      phoneNumber,
+      jobTitle,
+      industry,
+      yearsOfExperience,
+      company,
+      linkedInUrl,
+      skills,
+      mentorshipTopics,
+      bio,
+      profilePicture,
+    } = stored.data;
+
     const newUser = new Mentor({
       fullName,
       email,
@@ -68,7 +231,7 @@ const register = async (req, res) => {
       phoneNumber,
       jobTitle,
       industry,
-      yearsOfExperience: Number(yearsOfExperience), // Ensure it's a number
+      yearsOfExperience: Number(yearsOfExperience),
       company,
       linkedInUrl,
       skills,
@@ -78,6 +241,7 @@ const register = async (req, res) => {
     });
 
     await newUser.save();
+    otpStore.delete(email);
 
     res.status(201).json({
       message: "Registration Successful",
@@ -85,7 +249,53 @@ const register = async (req, res) => {
       userId: newUser._id.toString(),
     });
   } catch (err) {
-    console.error("Registration error:", err);
+    console.error("OTP verification error:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Send OTP for Forgot Password
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const mentor = await Mentor.findOne({ email });
+    if (!mentor) {
+      return res.status(404).json({ message: "Email not registered" });
+    }
+
+    const otp = generateOTP();
+    await sendOTPEmail(email, otp);
+    otpStore.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 });
+
+    res.status(200).json({ message: "OTP sent to your email for password reset." });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+// Reset Password with OTP
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    const stored = otpStore.get(email);
+    if (!stored || stored.otp !== otp || Date.now() > stored.expires) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const mentor = await Mentor.findOne({ email });
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+
+    mentor.password = newPassword;
+    await mentor.save();
+    otpStore.delete(email);
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    console.error("Reset password error:", err);
     res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
 };
@@ -456,15 +666,6 @@ const updateApplicationStatus = async (req, res) => {
   }
 };
 
-// Email transporter setup (configure with your SMTP service, e.g., Gmail)
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER, // Your email address (set in .env)
-    pass: process.env.EMAIL_PASS, // Your email password or app-specific password (set in .env)
-  },
-});
-
 // Function to send video call notification email
 const sendVideoCallEmail = async (menteeId, mentorId) => {
   try {
@@ -511,7 +712,9 @@ const scheduleVideoCall = async (req, res) => {
   }
 };
 
-module.exports = { register, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,};
+module.exports = { register, verifyOTP,
+  forgotPassword,
+  resetPassword, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,};
 
 
  

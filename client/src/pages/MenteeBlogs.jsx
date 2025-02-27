@@ -1,4 +1,3 @@
-// src/pages/MenteeBlogs.jsx
 import React from "react";
 import MenteeBlogList from "../pages/MenteeBlogList";
 

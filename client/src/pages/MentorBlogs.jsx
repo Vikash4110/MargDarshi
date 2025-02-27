@@ -1,6 +1,6 @@
-// src/pages/MentorBlogs.jsx
 import React from "react";
-import MentorBlogList from "../Components/MentorBlogList"
+import MentorBlogList from "../Components/MentorBlogList";
+
 const MentorBlogs = () => {
   return <MentorBlogList />;
 };
