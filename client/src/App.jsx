@@ -27,6 +27,11 @@ import MentorJobApplicants from './pages/MentorJobApplicants';
 import MenteeApplications from './pages/MenteeApplications';
 import MenteeBlogs from './pages/MenteeBlogs';
 import MentorBlogs from './pages/MentorBlogs';
+
+
+import AdminRegister from "./pages/AdminRegister";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -65,6 +70,11 @@ const App = () => {
         <Route path="/mentor-blogs" element={<MentorBlogs />} />
         <Route path="/mentee-blogs" element={<MenteeBlogs />} />
         <Route path="/logout" element={<LogOut />} />
+
+        {/* Admin Logics */}
+        <Route path="/admin/register" element={<AdminRegister />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

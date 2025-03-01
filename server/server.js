@@ -7,6 +7,7 @@ const cors = require("cors");
 const mentorRoute = require("./router/mentor-router");
 const menteeRoute = require("./router/mentee-router");
 const messageRoute = require("./router/message-controller");
+const adminRouter = require("./router/admin-router");
 const Message = require("./models/message-model");
 const path = require("path");
 const app = express();
@@ -87,6 +88,7 @@ io.on("connection", (socket) => {
 app.use("/api/auth", mentorRoute);
 app.use("/api/auth", menteeRoute);
 app.use("/api/auth", messageRoute);
+app.use("/api/admin", adminRouter);
 
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {

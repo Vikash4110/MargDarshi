@@ -1,94 +1,4 @@
-// // controllers/mentor-controller.js
-// const Mentor = require("../models/mentor-model");
-// const mongoose = require("mongoose");
-// const { GridFSBucket } = require("mongodb");
-// const multer = require("multer");
-// const mongoURI = process.env.MONGODB_URI;
-// const JobPost = require("../models/job-post-model");
-// const JobApplication = require("../models/job-application-model");
-// const Mentee = require("../models/mentee-model");
-// const ConnectionRequest = require("../models/connection-request-model");
-// const nodemailer = require("nodemailer");
-// const conn = mongoose.createConnection(mongoURI);
 
-// let gridfsBucket;
-// conn.once("open", () => {
-//   gridfsBucket = new GridFSBucket(conn.db, { bucketName: "uploads" });
-//   console.log("GridFS Bucket Ready in mentor-controller");
-// });
-
-// // Multer configuration (single file)
-// const imageUpload = multer({
-//   storage: multer.memoryStorage(),
-// }).single("profilePicture");
-
-// const register = async (req, res) => {
-//   try {
-//     const {
-//       fullName,
-//       email,
-//       password,
-//       phoneNumber,
-//       jobTitle,
-//       industry,
-//       yearsOfExperience,
-//       company,
-//       linkedInUrl,
-//       skills,
-//       mentorshipTopics,
-//       bio,
-//     } = req.body;
-
-//     let profilePicture = "";
-
-//     if (req.file) {
-//       const uploadStream = gridfsBucket.openUploadStream(req.file.originalname, {
-//         contentType: req.file.mimetype,
-//       });
-
-//       uploadStream.end(req.file.buffer);
-//       await new Promise((resolve, reject) => {
-//         uploadStream.on("finish", () => {
-//           profilePicture = uploadStream.id;
-//           resolve();
-//         });
-//         uploadStream.on("error", reject);
-//       });
-//     }
-
-//     const userExist = await Mentor.findOne({ email });
-//     if (userExist) {
-//       return res.status(400).json({ message: "Email already exists" });
-//     }
-
-//     const newUser = new Mentor({
-//       fullName,
-//       email,
-//       password,
-//       phoneNumber,
-//       jobTitle,
-//       industry,
-//       yearsOfExperience: Number(yearsOfExperience), // Ensure it's a number
-//       company,
-//       linkedInUrl,
-//       skills,
-//       mentorshipTopics,
-//       bio,
-//       profilePicture,
-//     });
-
-//     await newUser.save();
-
-//     res.status(201).json({
-//       message: "Registration Successful",
-//       token: await newUser.generateToken(),
-//       userId: newUser._id.toString(),
-//     });
-//   } catch (err) {
-//     console.error("Registration error:", err);
-//     res.status(500).json({ message: "Internal Server Error", error: err.message });
-//   }
-// };
 
 const Mentor = require("../models/mentor-model");
 const mongoose = require("mongoose");
@@ -712,9 +622,104 @@ const scheduleVideoCall = async (req, res) => {
   }
 };
 
+// Update availability
+const updateAvailability = async (req, res) => {
+  try {
+    const { availability } = req.body; // Array of { day, timeSlots: [{ startTime, endTime }] }
+    const mentorId = req.user._id;
+
+    const mentor = await Mentor.findById(mentorId);
+    if (!mentor) return res.status(404).json({ message: "Mentor not found" });
+
+    mentor.availability = availability;
+    await mentor.save();
+
+    res.status(200).json({ message: "Availability updated successfully", availability: mentor.availability });
+  } catch (err) {
+    console.error("Error updating availability:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Schedule a meeting
+const scheduleMeeting = async (req, res) => {
+  try {
+    const { menteeId, date, startTime, endTime } = req.body;
+    const mentorId = req.user._id;
+
+    const mentor = await Mentor.findById(mentorId);
+    const mentee = await Mentee.findById(menteeId);
+    if (!mentor || !mentee) return res.status(404).json({ message: "Mentor or Mentee not found" });
+
+    // Check if slot is available
+    const dayOfWeek = new Date(date).toLocaleString("en-US", { weekday: "long" });
+    const availableDay = mentor.availability.find((a) => a.day === dayOfWeek);
+    if (!availableDay || !availableDay.timeSlots.some((slot) => slot.startTime === startTime && slot.endTime === endTime)) {
+      return res.status(400).json({ message: "Selected time slot is not available" });
+    }
+
+    // Check for conflicts
+    const conflict = mentor.meetings.some(
+      (m) => m.date.toISOString().split("T")[0] === date && m.startTime === startTime
+    );
+    if (conflict) return res.status(400).json({ message: "Time slot already booked" });
+
+    const meetingLink = `${backendUrl}/meeting/${mentorId}-${menteeId}-${Date.now()}`; // Placeholder, integrate ZegoCloud link later
+    const meeting = { menteeId, date: new Date(date), startTime, endTime, meetingLink };
+
+    mentor.meetings.push(meeting);
+    mentee.connectedMentors = mentee.connectedMentors || [];
+    if (!mentee.connectedMentors.includes(mentorId)) mentee.connectedMentors.push(mentorId);
+
+    await Promise.all([mentor.save(), mentee.save()]);
+    await sendMeetingEmail(mentor, mentee, meeting);
+
+    res.status(201).json({ message: "Meeting scheduled successfully", meeting });
+  } catch (err) {
+    console.error("Error scheduling meeting:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+// Send meeting confirmation email
+const sendMeetingEmail = async (mentor, mentee, meeting) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: [mentor.email, mentee.email],
+    subject: "Meeting Scheduled - MargDarshi",
+    html: `
+      <p>Hello ${mentor.fullName} and ${mentee.fullName},</p>
+      <p>A meeting has been scheduled:</p>
+      <ul>
+        <li><strong>Date:</strong> ${new Date(meeting.date).toLocaleDateString()}</li>
+        <li><strong>Time:</strong> ${meeting.startTime} - ${meeting.endTime}</li>
+        <li><strong>Link:</strong> <a href="${meeting.meetingLink}">${meeting.meetingLink}</a></li>
+      </ul>
+      <p>Please join the meeting at the scheduled time.</p>
+      <p>Best regards,<br/>The MargDarshi Team</p>
+    `,
+  };
+  await transporter.sendMail(mailOptions);
+};
+
+// Get mentor's availability and meetings
+const getMentorSchedule = async (req, res) => {
+  try {
+    const mentorId = req.user._id;
+    const mentor = await Mentor.findById(mentorId).select("availability meetings");
+    if (!mentor) return res.status(404).json({ message: "Mentor not found" });
+
+    res.status(200).json({ availability: mentor.availability, meetings: mentor.meetings });
+  } catch (err) {
+    console.error("Error fetching schedule:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports = { register, verifyOTP,
   forgotPassword,
-  resetPassword, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,};
+  resetPassword, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,
+  updateAvailability, scheduleMeeting, getMentorSchedule};
 
 
  
