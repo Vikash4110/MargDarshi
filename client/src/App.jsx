@@ -1,33 +1,33 @@
-import React, { useEffect } from 'react';  // ✅ Import useEffect
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './Components/Navbar';
-import Home from './pages/Home';
-import About from './pages/About';
-import Mentors from './pages/Mentors';
-import Contact from './pages/Contact';
+import React, { useEffect } from "react"; // ✅ Import useEffect
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./Components/Navbar";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Mentors from "./pages/Mentors";
+import Contact from "./pages/Contact";
 import MentorRegister from "./pages/MentorRegister";
 import MenteeRegister from "./pages/MenteeRegister";
 import MentorLogin from "./pages/MentorLogin";
 import MenteeLogin from "./pages/MenteeLogin";
 import MentorUser from "./pages/MentorUser";
 import MentorUpdate from "./Components/MentorUpdate";
-import MenteeUser from './pages/MenteeUser';
-import MenteeUpdate from './Components/MenteeUpdate';
-import MenteeDashboard from './pages/MenteeDashboard';
-import MentorDashboard from './pages/MentorDashboard';
-import MentorShow from './pages/MentorShow';
-import MentorConnection from './pages/MentorConnection';
-import MenteeAcceptedReq from './pages/MenteeAcceptedReq';
-import MenteeMain from './pages/MenteeMain';
-import LogOut from './Components/LogOut';
+import MenteeUser from "./pages/MenteeUser";
+import MenteeUpdate from "./Components/MenteeUpdate";
+import MenteeDashboard from "./pages/MenteeDashboard";
+import MentorDashboard from "./pages/MentorDashboard";
+import MentorShow from "./pages/MentorShow";
+import MentorConnection from "./pages/MentorConnection";
+import MenteeAcceptedReq from "./pages/MenteeAcceptedReq";
+import MenteeMain from "./pages/MenteeMain";
+import LogOut from "./Components/LogOut";
 import SkillAssessment from "./pages/SkillAssessment";
 import PostJob from "./pages/PostJob";
 import JobMenteeDashboard from "./pages/JobMenteeDashboard";
-import MentorJobApplicants from './pages/MentorJobApplicants';
-import MenteeApplications from './pages/MenteeApplications';
-import MenteeBlogs from './pages/MenteeBlogs';
-import MentorBlogs from './pages/MentorBlogs';
-
+import MentorJobApplicants from "./pages/MentorJobApplicants";
+import MenteeApplications from "./pages/MenteeApplications";
+import MenteeBlogs from "./pages/MenteeBlogs";
+import MentorBlogs from "./pages/MentorBlogs";
+import MentorDash from "./Components/MentorDash";
 
 import AdminRegister from "./pages/AdminRegister";
 import AdminLogin from "./pages/AdminLogin";
@@ -65,7 +65,10 @@ const App = () => {
         <Route path="/skill-assessment" element={<SkillAssessment />} />
         <Route path="/post-job" element={<PostJob />} />
         <Route path="/job-mentee-dashboard" element={<JobMenteeDashboard />} />
-        <Route path="/mentor-job-applicants/:jobId" element={<MentorJobApplicants />} />
+        <Route
+          path="/mentor-job-applicants/:jobId"
+          element={<MentorJobApplicants />}
+        />
         <Route path="/mentee-applications" element={<MenteeApplications />} />
         <Route path="/mentor-blogs" element={<MentorBlogs />} />
         <Route path="/mentee-blogs" element={<MenteeBlogs />} />
@@ -73,8 +76,9 @@ const App = () => {
 
         {/* Admin Logics */}
         <Route path="/admin/register" element={<AdminRegister />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/mentor-dash" element={<MentorDash />} />
       </Routes>
     </Router>
   );

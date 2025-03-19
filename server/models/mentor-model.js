@@ -86,3 +86,4 @@ mentorSchema.methods.generateToken = function () {
 
 const Mentor = mongoose.model("Mentor", mentorSchema);
 module.exports = Mentor;
+
