@@ -56,7 +56,7 @@ const WhyMargDarshi = () => {
           transition={{ duration: 0.6 }}
         >
           <span className="relative text-gray-800">
-            Why <span className="text-[#127C71] font-extrabold">MargDarshi</span>?
+            Why <span className="text-[#127C71] font-extrabold">MentorConnect</span>?
             <svg className="absolute -top-3 -right-8 w-6 md:w-8 h-auto" viewBox="0 0 3183 3072">
               <path fill="#127C71" d="M2600 224c0,0 0,0 0,0 236,198 259,562 52,809 -254,303 -1849,2089 -2221,1776 -301,-190 917,-1964 1363,-2496 207,-247 570,-287 806,-89z" />
               <path fill="#127C71" d="M3166 2190c0,0 0,0 0,0 64,210 -58,443 -270,516 -260,90 -1848,585 -1948,252 -104,-230 1262,-860 1718,-1018 212,-73 437,39 500,250z" />

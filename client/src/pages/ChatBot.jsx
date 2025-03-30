@@ -16,14 +16,14 @@ const Chatbot = ({ onClose }) => {
     // Define responses for common questions with icons
     const responses = {
       hello: { text: "Hi there! How can I help you today?", icon: IoChatbox },
-      features: { text: "MargDarshi offers AI-powered mentor matching, real-time scheduling, video conferencing, and a feedback system.", icon: IoBulb },
-      technology: { text: "MargDarshi uses React.js and Tailwind CSS for the frontend, Node.js and Express.js for the backend, MongoDB for the database, and WebRTC for video calls.", icon: IoRocket },
+      features: { text: "MentorConnect offers AI-powered mentor matching, real-time scheduling, video conferencing, and a feedback system.", icon: IoBulb },
+      technology: { text: "MentorConnect uses React.js and Tailwind CSS for the frontend, Node.js and Express.js for the backend, MongoDB for the database, and WebRTC for video calls.", icon: IoRocket },
       objectives: { text: "Our objectives are to create a dynamic mentorship ecosystem, implement AI-based mentor matching, integrate real-time scheduling, and provide curated learning resources.", icon: IoPeople },
       "mentor matching": { text: "Mentors are matched using an AI-powered system that considers expertise, preferences, and mentee needs.", icon: IoChatbubbleEllipses },
       "video call": { text: "Mentorship sessions are conducted via video calls using WebRTC. You can schedule sessions through the integrated calendar.", icon: IoPhonePortrait },
       resources: { text: "We provide a curated repository of learning materials, industry guides, and expert insights to help you grow your skills and career.", icon: IoDocumentText },
       feedback: { text: "Mentors and mentees can provide feedback and ratings after each session. This helps maintain quality and improve the mentorship experience.", icon: IoShieldCheckmark },
-      contact: { text: "You can reach us at support@margdarshi.com.", icon: IoChatbox },
+      contact: { text: "You can reach us at support@mentorconnect.com.", icon: IoChatbox },
     };
 
     for (const [key, value] of Object.entries(responses)) {
@@ -89,7 +89,7 @@ const Chatbot = ({ onClose }) => {
       <div className="bg-gradient-to-r from-[#0f6f5c] to-teal-500 text-white p-4 flex justify-between items-center">
         <div className="flex items-center">
           <FaRobot className="text-2xl mr-2" />
-          <h2 className="text-xl font-extrabold tracking-tight">MargDarshi Chatbot</h2>
+          <h2 className="text-xl font-extrabold tracking-tight">MentorConnect Chatbot</h2>
         </div>
         <motion.button
           onClick={onClose}

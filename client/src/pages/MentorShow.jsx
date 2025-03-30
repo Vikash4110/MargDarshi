@@ -705,13 +705,13 @@ const MentorShow = () => {
           </h1>
           
           <div className="flex items-center gap-4">
-            <button 
+            {/* <button 
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               className="relative p-2 rounded-full hover:bg-gray-100"
             >
               <FaBell className="text-gray-600" />
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            </button> */}
             
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold">

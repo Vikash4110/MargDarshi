@@ -448,14 +448,14 @@ const MenteeMain = () => {
               />
               <FaSearch className="absolute left-3 top-3 text-gray-400" />
             </div> */}
-            
+{/*             
             <button 
               onClick={() => setNotificationsOpen(!notificationsOpen)}
               className="relative p-2 rounded-full hover:bg-gray-100"
             >
               <FaBell className="text-gray-600" />
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            </button> */}
             
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold">
@@ -492,7 +492,7 @@ const MenteeMain = () => {
       </main>
 
       {/* Notifications Panel */}
-      {notificationsOpen && (
+      {/* {notificationsOpen && (
         <motion.div 
           className="fixed right-6 top-16 w-72 bg-white rounded-lg shadow-xl border border-gray-200 z-20"
           initial={{ opacity: 0, y: -20 }}
@@ -509,7 +509,7 @@ const MenteeMain = () => {
             </div>
           </div>
         </motion.div>
-      )}
+      )} */}
     </div>
   );
 };

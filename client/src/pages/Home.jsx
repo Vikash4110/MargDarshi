@@ -13,6 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ChatBot from "../pages/ChatBot"; 
 import MenteeB from "../Components/MenteeB";
 import HeroStart from '../Components/HeroStart'
+import ScrollingFeatureStrap from '../Components/ScrollingFeatureStrap'
+
 const Home = () => {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
@@ -21,7 +23,11 @@ const Home = () => {
     <div className=" bg-gradient-to-br from-gray-50 to-teal-50 ">
     {/* <HeroStart/> */}
       {/* Hero Section with AOS */}
-      <div data-aos="fade-up">
+      <div data-aos="fade-up" >
+        <ScrollingFeatureStrap />
+      </div>
+
+      <div data-aos="fade-up" data-aos-delay="100">
         <Hero />
       </div>
 

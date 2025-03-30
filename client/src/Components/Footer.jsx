@@ -30,7 +30,7 @@ const Footer = () => {
                 <div className="bg-purple-500 w-5 h-5 rounded-full shadow-md"></div>
                 <div className="bg-blue-500 w-3 h-3 rounded-full shadow-md"></div>
               </div>
-              <span className="text-2xl font-bold tracking-tight text-white">MargDarshi</span>
+              <span className="text-2xl font-bold tracking-tight text-white">MentorConnect</span>
             </div>
             <p className="text-base leading-relaxed text-gray-200">
               Connecting mentees with expert mentors to guide your career journey effectively.
@@ -102,7 +102,7 @@ const Footer = () => {
           transition={{ duration: 0.8, ease: 'easeOut' }}
         />
         <motion.p className="text-sm text-center text-gray-200" variants={sectionVariants}>
-          © {new Date().getFullYear()}, All Rights Reserved by MargDarshi
+          © {new Date().getFullYear()}, All Rights Reserved by MentorConnect
         </motion.p>
       </div>
     </motion.section>

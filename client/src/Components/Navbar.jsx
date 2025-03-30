@@ -86,7 +86,7 @@ const Navbar = () => {
               to="/"
               className="ml-3 text-2xl font-bold text-[#127C71] tracking-tight hover:text-teal-600 transition-colors duration-300"
             >
-              MargDarshi
+              MentorConnect
             </Link>
           </motion.div>
 
@@ -95,7 +95,7 @@ const Navbar = () => {
             {[
               { to: '/', text: 'Home' },
               { to: '/about', text: 'About' },
-              { to: '/contact', text: 'Contact' },
+              {/* { to: '/contact', text: 'Contact' }, */}
             ].map((link, index) => (
               <motion.div
                 key={index}
@@ -208,7 +208,7 @@ const Navbar = () => {
               {[
                 { to: '/', text: 'Home' },
                 { to: '/about', text: 'About' },
-                { to: '/contact', text: 'Contact' },
+                {/* { to: '/contact', text: 'Contact' }, */}
               ].map((link, index) => (
                 <motion.div
                   key={index}
