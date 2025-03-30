@@ -12,15 +12,14 @@ import { FaCommentDots } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion"; 
 import ChatBot from "../pages/ChatBot"; 
 import MenteeB from "../Components/MenteeB";
-
+import HeroStart from '../Components/HeroStart'
 const Home = () => {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   return (
     <>
     <div className=" bg-gradient-to-br from-gray-50 to-teal-50 ">
-
-   
+    {/* <HeroStart/> */}
       {/* Hero Section with AOS */}
       <div data-aos="fade-up">
         <Hero />

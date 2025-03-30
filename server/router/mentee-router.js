@@ -34,6 +34,8 @@ router.post("/mentee-reset-password", menteeControllers.resetPassword);
 router.post("/mentee-login", validate(MenteeLoginSchema), menteeControllers.login);
 router.get("/mentee-user", menteeMiddleware, menteeControllers.mentee);
 router.patch("/mentee-update", menteeMiddleware, menteeControllers.updateUser);
+
+
 router.get("/mentee-matching-mentors", menteeMiddleware, menteeControllers.getMatchingMentors);
 router.post("/mentee-send-request", menteeMiddleware, menteeControllers.sendConnectionRequest);
 router.get("/mentee-connected-mentors", menteeMiddleware, menteeControllers.getConnectedMentors);
