@@ -349,6 +349,21 @@ const MentorLogin = ({ setIsLoggedIn }) => {
               </motion.p>
             </form>
           )}
+
+          {/* Beautiful Text Section */}
+          <motion.div
+  className="mt-6 px-4 py-3 bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg shadow-inner border border-teal-200"
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.8, duration: 0.6 }}
+>
+  <p className="text-sm text-gray-700  tracking-tight leading-tight">
+    For Mentor testing, use{" "}
+    <span className="font-semibold text-[#0f6f5c]">vanshkholi022@gmail.com</span>{" "}
+    as your email and{" "}
+    <span className="font-semibold text-[#0f6f5c]">12345678</span> as your password.
+  </p>
+</motion.div>
         </div>
       </motion.div>
     </motion.div>
