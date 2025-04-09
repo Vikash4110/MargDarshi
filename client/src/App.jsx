@@ -29,7 +29,7 @@ import MenteeBlogs from "./pages/MenteeBlogs";
 import MentorBlogs from "./pages/MentorBlogs";
 import MentorDash from "./Components/MentorDash";
 import Loader from "./Components/Loader";
-
+import NotFoundPage from './Components/NotFoundPage'
 import AdminRegister from "./pages/AdminRegister";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -96,6 +96,8 @@ const App = () => {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/mentor-dash" element={<MentorDash />} />
+          {/* Not Found Page  */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
     </Router>
