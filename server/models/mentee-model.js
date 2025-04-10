@@ -53,3 +53,4 @@ menteeSchema.methods.generateToken = function () {
 
 const Mentee = mongoose.model("Mentee", menteeSchema);
 module.exports = Mentee;
+ 
