@@ -716,10 +716,93 @@ const getMentorSchedule = async (req, res) => {
   }
 };
 
+const getMentorInsights = async (req, res) => {
+  try {
+    const mentorId = req.user._id;
+
+    // 1. Pending Requests Over Time (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const pendingRequests = await ConnectionRequest.aggregate([
+      { $match: { mentorId, createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 2. Connected Mentees Growth (monthly)
+    const menteesGrowth = await Mentor.aggregate([
+      { $match: { _id: mentorId } },
+      { $unwind: "$connectedMentees" },
+      {
+        $lookup: {
+          from: "mentees",
+          localField: "connectedMentees",
+          foreignField: "_id",
+          as: "menteeData",
+        },
+      },
+      { $unwind: "$menteeData" },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$menteeData.updatedAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 3. Response Rate
+    const responseStats = await ConnectionRequest.aggregate([
+      { $match: { mentorId } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+    const totalResponses = responseStats.reduce((sum, stat) => sum + stat.count, 0);
+    const accepted = responseStats.find((s) => s._id === "accepted")?.count || 0;
+    const responseRate = totalResponses ? (accepted / totalResponses) * 100 : 0;
+
+    // 4. Job Engagement
+    const jobEngagement = await JobPost.aggregate([
+      { $match: { mentorId } },
+      {
+        $lookup: {
+          from: "jobapplications",
+          localField: "_id",
+          foreignField: "jobId",
+          as: "applications",
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          applicationCount: { $size: "$applications" },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      pendingRequests,
+      menteesGrowth,
+      responseRate: responseRate.toFixed(1),
+      jobEngagement,
+    });
+  } catch (err) {
+    console.error("Error fetching mentor insights:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
 module.exports = { register, verifyOTP,
   forgotPassword,
   resetPassword, login, mentor, updateUser, respondToConnectionRequest, getAllMentors, getPendingRequests, getConnectedMentees, updateCalendlyLink , imageUpload , getImageById ,postJob,  getPostedJobs, getJobApplicants,updateJobStatus, updateApplicationStatus , scheduleVideoCall,
-  updateAvailability, scheduleMeeting, getMentorSchedule};
+  updateAvailability, scheduleMeeting, getMentorSchedule,getMentorInsights};
 
 
  

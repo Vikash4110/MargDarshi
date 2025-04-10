@@ -80,5 +80,5 @@ router.post("/blogs/share", mentorMiddleware, blogControllers.shareBlog);
 router.post("/update-availability", mentorMiddleware, mentorControllers.updateAvailability);
 router.post("/schedule-meeting", mentorMiddleware, mentorControllers.scheduleMeeting);
 router.get("/schedule", mentorMiddleware, mentorControllers.getMentorSchedule);
-
+router.get("/mentor-insights", mentorMiddleware, mentorControllers.getMentorInsights);
 module.exports = router;
